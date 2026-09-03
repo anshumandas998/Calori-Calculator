@@ -5,6 +5,20 @@ export default defineConfig({
   plugins: [react()],
   root: '.',
   publicDir: 'public',
+  build: {
+    chunkSizeWarningLimit: 1500,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('recharts')) return 'recharts';
+            if (id.includes('react')) return 'react';
+            return 'vendor';
+          }
+        }
+      }
+    }
+  },
   server: {
     port: 5173,
     proxy: {
