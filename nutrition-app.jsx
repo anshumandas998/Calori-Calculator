@@ -136,7 +136,8 @@ const THEMES = {
   }
 };
 
-const API_BASE = "";
+const RAW_API_BASE = (typeof import.meta !== "undefined" && import.meta.env && (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL)) || "";
+const API_BASE = String(RAW_API_BASE).replace(/\/+$/, "");
 
 // ─── Responsive Hook ──────────────────────────────────────────────
 function useIsMobile(breakpoint = 768) {
@@ -194,7 +195,11 @@ async function apiRequest(endpoint, options = {}) {
       headers,
     });
   } catch (networkErr) {
-    throw new Error("Unable to connect to server. Please check that the server is running on http://localhost:5173.");
+    throw new Error(
+      API_BASE
+        ? `Unable to connect to backend server at ${API_BASE}. Please check if the server is running and CORS is enabled.`
+        : "Unable to connect to server. If on Vercel, please set VITE_API_BASE_URL in your Vercel project settings to your backend URL."
+    );
   }
 
   if (!response.ok) {
@@ -205,7 +210,13 @@ async function apiRequest(endpoint, options = {}) {
     } catch {
       try {
         const text = await response.text();
-        if (text) error = text;
+        if (text && !text.includes("<!DOCTYPE") && !text.includes("<html")) {
+          error = text;
+        } else if (response.status === 404) {
+          error = API_BASE
+            ? `API endpoint not found (404) at ${url}.`
+            : "Backend API not found (404). If deployed on Vercel, please set VITE_API_BASE_URL in your Vercel project settings to your deployed backend URL.";
+        }
       } catch {}
     }
 
@@ -298,17 +309,33 @@ async function apiImageNutrition(formData) {
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
-  const response = await fetch(`${API_BASE}/api/nutrition/image`, {
-    method: "POST",
-    headers,
-    body: formData,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE}/api/nutrition/image`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+  } catch (networkErr) {
+    throw new Error(
+      API_BASE
+        ? `Unable to reach backend server (${API_BASE}).`
+        : "Unable to connect to backend server. Please check your network or VITE_API_BASE_URL."
+    );
+  }
   if (!response.ok) {
     let error = "Request failed";
     try {
       const errData = await response.json();
       error = errData.error || errData.message || error;
-    } catch {}
+    } catch {
+      try {
+        const text = await response.text();
+        if (text && !text.includes("<!DOCTYPE") && !text.includes("<html")) {
+          error = text;
+        }
+      } catch {}
+    }
     throw new Error(error);
   }
   return response.json();
