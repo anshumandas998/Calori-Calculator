@@ -493,21 +493,25 @@ app.post('/api/login', async (req, res) => {
   try {
     let { email, password } = req.body || {};
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+      return res.status(400).json({ error: 'Please provide both email and password.' });
     }
     email = String(email).trim().toLowerCase();
     const stmt = db.prepare('SELECT * FROM users WHERE LOWER(email) = ?');
     const user = stmt.get(email);
-    if (!user) return res.status(400).json({ error: 'Invalid credentials' });
+    if (!user) {
+      return res.status(400).json({ error: 'No account found with this email. Please check your email or sign up.' });
+    }
     
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ error: 'Invalid credentials' });
+    const match = await bcrypt.compare(String(password), user.password);
+    if (!match) {
+      return res.status(400).json({ error: 'Incorrect password. Please try again.' });
+    }
     
     const { password: _, ...userWithoutPassword } = user;
     const token = jwt.sign(userWithoutPassword, JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, user: userWithoutPassword });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message || 'Internal server error during login' });
   }
 });
 

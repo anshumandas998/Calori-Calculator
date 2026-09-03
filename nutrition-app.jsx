@@ -187,10 +187,15 @@ async function apiRequest(endpoint, options = {}) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers,
+    });
+  } catch (networkErr) {
+    throw new Error("Unable to connect to server. Please check that the server is running on http://localhost:5173.");
+  }
 
   if (!response.ok) {
     let error = "Request failed";
@@ -204,7 +209,7 @@ async function apiRequest(endpoint, options = {}) {
       } catch {}
     }
 
-    if (response.status === 401 || response.status === 403) {
+    if ((response.status === 401 || response.status === 403) && !endpoint.includes("/api/login") && !endpoint.includes("/api/register")) {
       setStoredToken(null);
       setStoredUser(null);
       window.dispatchEvent(new Event("nu_auth_expired"));
@@ -224,10 +229,14 @@ async function apiRegister(data) {
   });
 }
 
-async function apiLogin(data) {
+async function apiLogin(dataOrEmail, possiblePassword) {
+  const payload = (typeof dataOrEmail === "object" && dataOrEmail !== null)
+    ? dataOrEmail
+    : { email: dataOrEmail, password: possiblePassword };
+
   return apiRequest("/api/login", {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify(payload),
   });
 }
 
