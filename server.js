@@ -462,29 +462,67 @@ app.post('/api/register', async (req, res) => {
   try {
     let { name, email, password, age, weight, height, goal } = req.body || {};
     if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Name, email, and password are required' });
+      return res.status(400).json({ error: 'Please provide full name, email, and password.' });
     }
     name = String(name).trim();
     email = String(email).trim().toLowerCase();
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Valid name, email, and password are required' });
+    password = String(password);
+
+    if (!name) {
+      return res.status(400).json({ error: 'Please enter your full name.' });
     }
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
+    if (password.length < 3) {
+      return res.status(400).json({ error: 'Password must be at least 3 characters.' });
+    }
+
+    // Explicit check for existing email
+    const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = ?').get(email);
+    if (existing) {
+      return res.status(400).json({ error: 'An account with this email already exists. Please sign in instead.' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const avatar = (name[0] || 'U').toUpperCase();
     const stmt = db.prepare('INSERT INTO users (name, email, password, age, weight, height, goal, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-    const result = stmt.run(name, email, hashedPassword, age ? Number(age) : null, weight ? Number(weight) : null, height ? Number(height) : null, goal || 'maintain', avatar);
+    const result = stmt.run(
+      name,
+      email,
+      hashedPassword,
+      age && !isNaN(Number(age)) ? Number(age) : null,
+      weight && !isNaN(Number(weight)) ? Number(weight) : null,
+      height && !isNaN(Number(height)) ? Number(height) : null,
+      goal || 'maintain',
+      avatar
+    );
     
-    const goalsStmt = db.prepare('INSERT INTO goals (user_id) VALUES (?)');
-    goalsStmt.run(result.lastInsertRowid);
+    // Seed default goals for user
+    try {
+      const goalsStmt = db.prepare('INSERT OR IGNORE INTO goals (user_id) VALUES (?)');
+      goalsStmt.run(result.lastInsertRowid);
+    } catch (gErr) {
+      console.warn('Goals init notice:', gErr.message);
+    }
     
-    const user = { id: result.lastInsertRowid, name, email, age: age ? Number(age) : null, weight: weight ? Number(weight) : null, height: height ? Number(height) : null, goal: goal || 'maintain', avatar };
+    const user = {
+      id: result.lastInsertRowid,
+      name,
+      email,
+      age: age && !isNaN(Number(age)) ? Number(age) : null,
+      weight: weight && !isNaN(Number(weight)) ? Number(weight) : null,
+      height: height && !isNaN(Number(height)) ? Number(height) : null,
+      goal: goal || 'maintain',
+      avatar
+    };
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, user });
   } catch (err) {
-    if (err.code === 'SQLITE_CONSTRAINT') {
-      res.status(400).json({ error: 'Email already exists' });
+    if (err.message && (err.message.includes('UNIQUE') || err.message.includes('email') || err.code?.startsWith('SQLITE_CONSTRAINT'))) {
+      res.status(400).json({ error: 'An account with this email already exists. Please sign in instead.' });
     } else {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: err.message || 'Registration failed' });
     }
   }
 });
