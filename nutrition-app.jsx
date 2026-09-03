@@ -319,12 +319,12 @@ async function apiImageNutrition(formData) {
   } catch (networkErr) {
     throw new Error(
       API_BASE
-        ? `Unable to reach backend server (${API_BASE}).`
+        ? `Unable to reach backend server (${API_BASE}). Please check your connection.`
         : "Unable to connect to backend server. Please check your network or VITE_API_BASE_URL."
     );
   }
   if (!response.ok) {
-    let error = "Request failed";
+    let error = "Photo analysis failed";
     try {
       const errData = await response.json();
       error = errData.error || errData.message || error;
@@ -333,8 +333,18 @@ async function apiImageNutrition(formData) {
         const text = await response.text();
         if (text && !text.includes("<!DOCTYPE") && !text.includes("<html")) {
           error = text;
+        } else if (response.status === 413) {
+          error = "Image is too large. Photo was automatically resized, please try again.";
+        } else if (response.status === 404) {
+          error = "Backend image analysis route not found (404).";
         }
       } catch {}
+    }
+    if (response.status === 401 || response.status === 403) {
+      setStoredToken(null);
+      setStoredUser(null);
+      window.dispatchEvent(new Event("nu_auth_expired"));
+      error = "Your session expired. Please sign in again.";
     }
     throw new Error(error);
   }
@@ -2151,12 +2161,70 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
     }
   };
 
-  const processAndAnalyzeFile = async (file) => {
-    if (!file) return;
-    setSelectedImage(file);
-    setImagePreview(URL.createObjectURL(file));
+  const compressImageForAnalysis = (file) => {
+    return new Promise((resolve) => {
+      if (!file || !file.type || !file.type.startsWith("image/")) {
+        return resolve(file);
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX_DIM = 1280;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_DIM) {
+              height = Math.round((height * MAX_DIM) / width);
+              width = MAX_DIM;
+            }
+          } else {
+            if (height > MAX_DIM) {
+              width = Math.round((width * MAX_DIM) / height);
+              height = MAX_DIM;
+            }
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressed = new File([blob], file.name ? file.name.replace(/\.[^/.]+$/, ".jpg") : "food-scan.jpg", {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                resolve(compressed);
+              } else {
+                resolve(file);
+              }
+            },
+            "image/jpeg",
+            0.82
+          );
+        };
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const processAndAnalyzeFile = async (rawFile) => {
+    if (!rawFile) return;
     setLoading(true); setError(""); setResult(null); setAiTip(""); setSaved(false);
     try {
+      // Auto-compress high-res mobile photos so upload is instant and fits payload limits
+      const file = await compressImageForAnalysis(rawFile);
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
+
       const formData = new FormData();
       formData.append("image", file);
       const data = await apiImageNutrition(formData);
@@ -2186,6 +2254,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
     const file = e.target.files?.[0];
     if (file) {
       processAndAnalyzeFile(file);
+      e.target.value = "";
     }
   };
 
@@ -2196,13 +2265,16 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } }
+        video: { facingMode: facing === "environment" ? { ideal: "environment" } : "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
       });
       streamRef.current = stream;
       setIsLiveCamera(true);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.setAttribute("playsinline", "true");
+        videoRef.current.setAttribute("webkit-playsinline", "true");
+        videoRef.current.play().catch(e => console.warn("Video autoplay notice:", e));
       }
     } catch (err) {
       console.warn("Could not access live webcam/camera directly:", err);
