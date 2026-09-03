@@ -970,24 +970,6 @@ function AuthModal({ onLogin, onClose, initialMode = "login", COLORS, S, isMobil
     }
   };
 
-  const handleDemoLogin = async () => {
-    setErr("");
-    setLoading(true);
-    try {
-      const result = await apiLogin({
-        email: "demo@nutriai.com",
-        password: "demo123",
-      });
-      setStoredToken(result.token);
-      setStoredUser(result.user);
-      onLogin(result.user);
-    } catch (error) {
-      setErr(error.message || "Failed to sign in with demo account");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div style={{
       position: "fixed",
@@ -1121,30 +1103,6 @@ function AuthModal({ onLogin, onClose, initialMode = "login", COLORS, S, isMobil
             {loading ? "Please wait..." : mode === "login" ? "Sign In to NutriAI" : "Create My Account"}
           </button>
         </form>
-
-        {mode === "login" && (
-          <div style={{ marginTop: 12 }}>
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              disabled={loading}
-              style={{
-                ...S.btnOutline,
-                width: "100%",
-                padding: "11px 0",
-                fontSize: 13,
-                border: `1px solid ${COLORS.borderHover}`,
-                background: "rgba(255, 255, 255, 0.04)",
-                color: COLORS.primaryLight,
-              }}
-            >
-              <span>⚡</span> One-Click Instant Demo Login
-            </button>
-            <div style={{ textAlign: "center", marginTop: 8, fontSize: 11, color: COLORS.textMuted }}>
-              Demo user: <span style={{ color: COLORS.primaryLight }}>demo@nutriai.com</span> (Password: demo123)
-            </div>
-          </div>
-        )}
 
         <div style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: COLORS.textMuted }}>
           {mode === "login" ? (
@@ -1358,7 +1316,7 @@ function LandingPage({ onOpenAuth, onDemoLogin, themeKey, onSelectTheme, COLORS,
           </button>
 
           <button
-            onClick={onDemoLogin}
+            onClick={() => onOpenAuth("login")}
             style={{
               ...S.btnOutline,
               padding: "14px 28px",
@@ -1371,7 +1329,7 @@ function LandingPage({ onOpenAuth, onDemoLogin, themeKey, onSelectTheme, COLORS,
               background: "rgba(255,255,255,0.03)",
             }}
           >
-            <span>⚡</span> Instant 1-Click Demo
+            Sign In
           </button>
         </div>
 
@@ -3273,7 +3231,6 @@ export default function NutritionApp() {
       <>
         <LandingPage
           onOpenAuth={(m) => setAuthModalMode(m || "login")}
-          onDemoLogin={handleDemoDirectLogin}
           themeKey={themeKey}
           onSelectTheme={handleSelectTheme}
           COLORS={currentTheme}
