@@ -960,14 +960,22 @@ app.post('/api/ai/recommendations', authenticateToken, async (req, res) => {
   }
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
+
 app.use((req, res) => {
   const filePath = path.join(__dirname, 'dist', 'index.html');
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      console.error('Error serving index.html:', err);
-      res.status(500).json({ error: 'Failed to load page' });
-    }
-  });
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error('Error serving index.html:', err);
+        res.status(500).json({ error: 'Failed to load page' });
+      }
+    });
+  } else {
+    res.status(200).json({ status: 'Calorie Calculator API is running', health: '/api/health' });
+  }
 });
 
 app.listen(PORT, () => {
