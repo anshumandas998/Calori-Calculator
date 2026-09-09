@@ -624,7 +624,25 @@ app.post('/api/login', async (req, res) => {
 // ─── Google OAuth Authentication Endpoint ─────────────────────────
 app.post('/api/auth/google', async (req, res) => {
   try {
-    const { email, name, avatar } = req.body || {};
+    let { email, name, avatar, credential } = req.body || {};
+
+    // If an official Google ID token credential was provided, verify with Google
+    if (credential) {
+      try {
+        const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
+        if (verifyRes.ok) {
+          const gData = await verifyRes.json();
+          if (gData.email) {
+            email = gData.email;
+            name = gData.name || name;
+            avatar = gData.picture || avatar;
+          }
+        }
+      } catch (tokenErr) {
+        console.warn('Google token verification notice:', tokenErr.message);
+      }
+    }
+
     const safeEmail = (email || 'google.user@nutriai.com').trim().toLowerCase();
     const safeName = name || safeEmail.split('@')[0] || 'Google User';
     const safeAvatar = avatar || safeName.charAt(0).toUpperCase();

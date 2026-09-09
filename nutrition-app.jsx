@@ -931,6 +931,8 @@ function MobileBottomNav({ page, setPage, onOpenAdmin, isAuthorizedAdmin, COLORS
 }
 
 // ─── GOOGLE SIGN-IN MODAL ──────────────────────────────────────────
+const GOOGLE_CLIENT_ID = "821750384600-2kgsgdv5fh6f1gdbpacube7i77m826he.apps.googleusercontent.com";
+
 function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, isMobile }) {
   const [activeTab, setActiveTab] = useState("select"); // 'select' | 'custom'
   const [customEmail, setCustomEmail] = useState("");
@@ -938,11 +940,10 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (!isOpen) return null;
-
-  const handleSignIn = async (email, name) => {
+  const handleSignIn = async (email, name, avatar, credential) => {
     const safeEmail = (email || "").trim().toLowerCase();
     const safeName = (name || safeEmail.split("@")[0] || "Google User").trim();
+    const safeAvatar = avatar || safeName.charAt(0).toUpperCase() || "G";
 
     if (!safeEmail || !safeEmail.includes("@")) {
       setError("Please enter a valid Google email address.");
@@ -958,7 +959,8 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
         body: JSON.stringify({
           email: safeEmail,
           name: safeName,
-          avatar: safeName.charAt(0).toUpperCase() || "G"
+          avatar: safeAvatar,
+          credential,
         })
       });
       const data = await res.json();
@@ -980,6 +982,53 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (window.google?.accounts?.id) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (response) => {
+            if (response?.credential) {
+              setLoading(true);
+              setError("");
+              try {
+                const base64Url = response.credential.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                const payload = JSON.parse(jsonPayload);
+                await handleSignIn(payload.email, payload.name, payload.picture, response.credential);
+              } catch (err) {
+                setError(err.message || "Google credential verification failed.");
+                setLoading(false);
+              }
+            }
+          },
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        const btnEl = document.getElementById("google-official-btn-container");
+        if (btnEl) {
+          btnEl.innerHTML = "";
+          window.google.accounts.id.renderButton(btnEl, {
+            type: "standard",
+            theme: "outline",
+            size: "large",
+            text: "continue_with",
+            shape: "pill",
+            width: isMobile ? 270 : 340,
+          });
+        }
+      } catch (err) {
+        console.warn("GSI init notice:", err);
+      }
+    }
+  }, [isOpen, isMobile]);
+
+  if (!isOpen) return null;
 
   return (
     <div style={{
@@ -1045,8 +1094,8 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
         </button>
 
         {/* Google Header */}
-        <div style={{ textAlign: "center", marginBottom: 22 }}>
-          <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: 12 }}>
+        <div style={{ textAlign: "center", marginBottom: 18 }}>
+          <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: 10 }}>
             <svg width="40" height="40" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -1068,6 +1117,9 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
           </p>
         </div>
 
+        {/* Official Google One Tap Button Container */}
+        <div id="google-official-btn-container" style={{ display: "flex", justifyContent: "center", marginBottom: 14, minHeight: 44 }} />
+
         {/* Error banner */}
         {error && (
           <div style={{
@@ -1087,6 +1139,17 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
             <span>{error}</span>
           </div>
         )}
+
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          margin: "8px 0 16px",
+        }}>
+          <div style={{ flex: 1, height: 1, background: "#e4e4e7" }} />
+          <span style={{ fontSize: 11, color: "#a1a1aa", textTransform: "uppercase", fontWeight: 700 }}>OR SELECT ACCOUNT</span>
+          <div style={{ flex: 1, height: 1, background: "#e4e4e7" }} />
+        </div>
 
         {activeTab === "select" ? (
           <div>
