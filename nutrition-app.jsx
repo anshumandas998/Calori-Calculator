@@ -1961,6 +1961,8 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
   const [aiTip, setAiTip] = useState("");
   const [tipLoading, setTipLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [filter, setFilter] = useState("all");
   const [searchHistory, setSearchHistory] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -2157,14 +2159,35 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
   }, []);
 
   const save = async () => {
-    if (!result) return;
+    if (!result || isSaving) return;
+    setIsSaving(true);
+    setSaveError("");
     try {
-      const mealDate = new Date((logDate || new Date().toISOString().split('T')[0]) + "T12:00:00").toISOString();
-      await apiAddMeal({ ...result, date: mealDate });
-      onSave && onSave();
+      const todayISO = new Date().toISOString().split('T')[0];
+      const targetDateStr = logDate || selectedDate || todayISO;
+      const mealDate = new Date(targetDateStr + "T12:00:00").toISOString();
+      await apiAddMeal({
+        name: result.name || food || "Logged Meal",
+        calories: Math.round(Number(result.calories) || 0),
+        protein: parseFloat((Number(result.protein) || 0).toFixed(1)),
+        carbs: parseFloat((Number(result.carbs) || 0).toFixed(1)),
+        fat: parseFloat((Number(result.fat) || 0).toFixed(1)),
+        fiber: parseFloat((Number(result.fiber) || 0).toFixed(1)),
+        sugar: parseFloat((Number(result.sugar) || 0).toFixed(1)),
+        sodium: Math.round(Number(result.sodium) || 0),
+        serving: result.serving || `${qty}${unit}`,
+        date: mealDate,
+      });
+      if (onSave) onSave();
       setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+      }, 4000);
     } catch (err) {
       console.error("Error saving meal:", err);
+      setSaveError(err.message || "Could not save meal. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -2637,9 +2660,40 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
               </div>
 
               <div style={{ marginTop: 14 }}>
-                <button style={{ ...S.btn, width: "100%" }} onClick={save} disabled={saved}>
-                  {saved ? "✓ Meal Saved to Database!" : `💾 Save for ${logDate === new Date().toISOString().split('T')[0] ? "Today" : logDate}`}
+                <button
+                  style={{
+                    ...S.btn,
+                    width: "100%",
+                    opacity: isSaving ? 0.75 : 1,
+                    cursor: isSaving ? "wait" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                  }}
+                  onClick={save}
+                  disabled={isSaving || saved}
+                >
+                  {isSaving
+                    ? "⏳ Saving Meal to Database..."
+                    : saved
+                    ? "✓ Meal Saved to Database!"
+                    : `💾 Save for ${logDate === new Date().toISOString().split('T')[0] ? "Today" : logDate}`}
                 </button>
+                {saveError && (
+                  <div style={{
+                    marginTop: 10,
+                    background: "#fef2f2",
+                    color: "#b91c1c",
+                    border: "1px solid #fecaca",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    fontSize: 12,
+                    textAlign: "center"
+                  }}>
+                    {saveError}
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -592,8 +592,14 @@ app.post('/api/login', async (req, res) => {
 
     let user = null;
     if (supabase.isConfigured()) {
-      user = await supabase.getUserByEmail(email);
-    } else {
+      try {
+        user = await supabase.getUserByEmail(email);
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase getUserByEmail failed, falling back to SQLite:', sbErr.message);
+        user = null;
+      }
+    }
+    if (!user) {
       const stmt = db.prepare('SELECT * FROM users WHERE LOWER(email) = ?');
       user = stmt.get(email);
     }
@@ -821,8 +827,12 @@ app.get('/api/meals', authenticateToken, async (req, res) => {
   try {
     const { date } = req.query;
     if (supabase.isConfigured()) {
-      const meals = await supabase.getMeals(req.user.id, date || null);
-      return res.json(meals);
+      try {
+        const meals = await supabase.getMeals(req.user.id, date || null);
+        if (meals && meals.length > 0) return res.json(meals);
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase getMeals error, falling back to SQLite:', sbErr.message);
+      }
     }
     if (date) {
       const stmt = db.prepare('SELECT * FROM meals WHERE user_id = ? AND (date LIKE ? OR date LIKE ?) ORDER BY date DESC');
@@ -915,27 +925,32 @@ app.post('/api/meals', authenticateToken, async (req, res) => {
     const { name, calories, protein, carbs, fat, fiber, sugar, sodium, serving, date } = req.body;
     const mealDate = date ? new Date(date).toISOString() : new Date().toISOString();
 
+    let sbMeal = null;
     if (supabase.isConfigured()) {
-      const meal = await supabase.addMeal({
-        user_id: req.user.id,
-        name,
-        calories: Number(calories) || 0,
-        protein: Number(protein) || 0,
-        carbs: Number(carbs) || 0,
-        fat: Number(fat) || 0,
-        fiber: Number(fiber) || 0,
-        sugar: Number(sugar) || 0,
-        sodium: Number(sodium) || 0,
-        serving: serving || '1 serving',
-        date: mealDate
-      });
-      return res.json(meal);
+      try {
+        sbMeal = await supabase.addMeal({
+          user_id: req.user.id,
+          name: name || 'Logged Meal',
+          calories: Number(calories) || 0,
+          protein: Number(protein) || 0,
+          carbs: Number(carbs) || 0,
+          fat: Number(fat) || 0,
+          fiber: Number(fiber) || 0,
+          sugar: Number(sugar) || 0,
+          sodium: Number(sodium) || 0,
+          serving: serving || '1 serving',
+          date: mealDate
+        });
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase addMeal notice, saving to SQLite:', sbErr.message);
+      }
     }
 
     const stmt = db.prepare('INSERT INTO meals (user_id, name, calories, protein, carbs, fat, fiber, sugar, sodium, serving, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    const result = stmt.run(req.user.id, name, calories, protein, carbs, fat, fiber, sugar, sodium, serving, mealDate);
-    res.json({ id: result.lastInsertRowid, ...req.body, date: mealDate });
+    const result = stmt.run(req.user.id, name || 'Logged Meal', Number(calories) || 0, Number(protein) || 0, Number(carbs) || 0, Number(fat) || 0, Number(fiber) || 0, Number(sugar) || 0, Number(sodium) || 0, serving || '1 serving', mealDate);
+    res.json(sbMeal || { id: result.lastInsertRowid, ...req.body, date: mealDate });
   } catch (err) {
+    console.error('Error in POST /api/meals:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -943,8 +958,11 @@ app.post('/api/meals', authenticateToken, async (req, res) => {
 app.delete('/api/meals/:id', authenticateToken, async (req, res) => {
   try {
     if (supabase.isConfigured()) {
-      await supabase.deleteMeal(req.params.id, req.user.id);
-      return res.sendStatus(204);
+      try {
+        await supabase.deleteMeal(req.params.id, req.user.id);
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase deleteMeal notice, deleting from SQLite:', sbErr.message);
+      }
     }
     const stmt = db.prepare('DELETE FROM meals WHERE id = ? AND user_id = ?');
     stmt.run(req.params.id, req.user.id);
@@ -957,8 +975,12 @@ app.delete('/api/meals/:id', authenticateToken, async (req, res) => {
 app.get('/api/goals', authenticateToken, async (req, res) => {
   try {
     if (supabase.isConfigured()) {
-      const goals = await supabase.getGoals(req.user.id);
-      return res.json(goals || { calories: 2000, protein: 150, carbs: 250, fat: 65 });
+      try {
+        const goals = await supabase.getGoals(req.user.id);
+        if (goals) return res.json(goals);
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase getGoals notice, falling back to SQLite:', sbErr.message);
+      }
     }
     const stmt = db.prepare('SELECT * FROM goals WHERE user_id = ?');
     const goals = stmt.get(req.user.id);
@@ -971,18 +993,25 @@ app.get('/api/goals', authenticateToken, async (req, res) => {
 app.put('/api/goals', authenticateToken, async (req, res) => {
   try {
     const { calories, protein, carbs, fat } = req.body;
+    let sbGoals = null;
     if (supabase.isConfigured()) {
-      const goals = await supabase.upsertGoals(req.user.id, {
-        calories: Number(calories) || 2000,
-        protein: Number(protein) || 150,
-        carbs: Number(carbs) || 250,
-        fat: Number(fat) || 65
-      });
-      return res.json(goals);
+      try {
+        sbGoals = await supabase.upsertGoals(req.user.id, {
+          calories: Number(calories) || 2000,
+          protein: Number(protein) || 150,
+          carbs: Number(carbs) || 250,
+          fat: Number(fat) || 65
+        });
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase upsertGoals notice, saving to SQLite:', sbErr.message);
+      }
     }
     const stmt = db.prepare('UPDATE goals SET calories = ?, protein = ?, carbs = ?, fat = ? WHERE user_id = ?');
-    stmt.run(calories, protein, carbs, fat, req.user.id);
-    res.json(req.body);
+    const result = stmt.run(calories, protein, carbs, fat, req.user.id);
+    if (result.changes === 0) {
+      db.prepare('INSERT OR IGNORE INTO goals (user_id, calories, protein, carbs, fat) VALUES (?, ?, ?, ?, ?)').run(req.user.id, calories, protein, carbs, fat);
+    }
+    res.json(sbGoals || req.body);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -992,8 +1021,12 @@ app.get('/api/water', authenticateToken, async (req, res) => {
   try {
     const date = req.query.date || new Date().toISOString().split('T')[0];
     if (supabase.isConfigured()) {
-      const water = await supabase.getWater(req.user.id, date);
-      return res.json({ amount: water?.amount || 0 });
+      try {
+        const water = await supabase.getWater(req.user.id, date);
+        if (water) return res.json({ amount: water?.amount || 0 });
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase getWater notice, falling back to SQLite:', sbErr.message);
+      }
     }
     const stmt = db.prepare('SELECT * FROM water WHERE user_id = ? AND date = ?');
     const water = stmt.get(req.user.id, date);
@@ -1007,13 +1040,17 @@ app.post('/api/water', authenticateToken, async (req, res) => {
   try {
     const date = req.body.date || new Date().toISOString().split('T')[0];
     const amount = Number(req.body.amount) || 0;
+    let sbWater = null;
     if (supabase.isConfigured()) {
-      const water = await supabase.upsertWater(req.user.id, date, amount);
-      return res.json({ amount: water?.amount || amount });
+      try {
+        sbWater = await supabase.upsertWater(req.user.id, date, amount);
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase upsertWater notice, saving to SQLite:', sbErr.message);
+      }
     }
     const stmt = db.prepare('INSERT OR REPLACE INTO water (user_id, date, amount) VALUES (?, ?, ?)');
     stmt.run(req.user.id, date, amount);
-    res.json({ amount });
+    res.json({ amount: sbWater?.amount || amount });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

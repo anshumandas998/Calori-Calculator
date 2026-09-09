@@ -1,4 +1,29 @@
 import { useState, useRef } from "react";
+import Hero3DCanvas from "./Hero3DCanvas.jsx";
+import Calculator3DCanvas from "./Calculator3DCanvas.jsx";
+import { use3DTilt } from "./use3DTilt.js";
+
+// ─── Reusable 3D Perspective Card Wrapper ──────────────────────────
+function Tilt3DWrapper({ children, maxTilt = 12, scale = 1.02, style, className }) {
+  const { ref, style: tiltStyle, glareStyle, onMouseMove, onMouseLeave } = use3DTilt({ maxTilt, scale });
+  return (
+    <div
+      ref={ref}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      style={{
+        ...tiltStyle,
+        position: "relative",
+        overflow: "hidden",
+        ...style,
+      }}
+      className={className}
+    >
+      {children}
+      <div style={glareStyle} />
+    </div>
+  );
+}
 
 // ─── Icons Matching Reference Design ──────────────────────────────
 function AppleGaugeLogo({ size = 36 }) {
@@ -66,6 +91,7 @@ export default function LandingPage({ onOpenAuth, onOpenAdmin, onDemoLogin, them
   const [calcHeight, setCalcHeight] = useState(175); // cm
   const [calcActivity, setCalcActivity] = useState(1.375); // Lightly active
   const [calcGoal, setCalcGoal] = useState("maintain"); // lose, maintain, gain
+  const [calcViewMode, setCalcViewMode] = useState("3d"); // "3d" | "2d"
 
   // Interactive Mifflin-St Jeor Calculation
   const calculateDailyNeeds = () => {
@@ -329,7 +355,7 @@ export default function LandingPage({ onOpenAuth, onOpenAdmin, onDemoLogin, them
         </div>
       )}
 
-      {/* ─── Hero Section (Exact Match to Image) ─── */}
+      {/* ─── Hero Section (Exact Match to Image with 3D WebGL Core) ─── */}
       <section style={{
         maxWidth: 1360,
         margin: "0 auto",
@@ -340,6 +366,32 @@ export default function LandingPage({ onOpenAuth, onOpenAdmin, onDemoLogin, them
         gap: isMobile ? 32 : 36,
         position: "relative",
       }}>
+        {/* Ambient 3D Depth Glow Orbs */}
+        <div style={{
+          position: "absolute",
+          top: -60,
+          left: -80,
+          width: 480,
+          height: 480,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(35, 122, 68, 0.09) 0%, rgba(35, 122, 68, 0) 70%)",
+          filter: "blur(40px)",
+          pointerEvents: "none",
+          zIndex: 0,
+        }} />
+        <div style={{
+          position: "absolute",
+          top: 80,
+          right: -80,
+          width: 520,
+          height: 520,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0) 70%)",
+          filter: "blur(50px)",
+          pointerEvents: "none",
+          zIndex: 0,
+        }} />
+
         {/* Left Column Content */}
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
           {/* Main Headline */}
@@ -439,113 +491,201 @@ export default function LandingPage({ onOpenAuth, onOpenAdmin, onDemoLogin, them
               { icon: <TargetIcon size={26} color="#237a44" />, title: "Achieve Your\nGoals" },
               { icon: <ShieldCheckIcon size={26} color="#237a44" />, title: "Healthy\nLifestyle" },
             ].map((badge, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  padding: "8px 6px",
-                  cursor: "default",
-                }}
-              >
-                {/* Icon Container with soft rounded card shape */}
-                <div style={{
-                  width: 58,
-                  height: 58,
-                  borderRadius: 16,
-                  background: "rgba(255, 255, 255, 0.7)",
-                  border: "1px solid rgba(255, 255, 255, 0.8)",
-                  boxShadow: "0 4px 14px rgba(0, 0, 0, 0.04)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 10,
-                  transition: "transform 0.2s ease, background 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-3px)";
-                  e.currentTarget.style.background = "#ffffff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.7)";
-                }}
+              <Tilt3DWrapper key={idx} maxTilt={15} scale={1.05} style={{ borderRadius: 18 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    textAlign: "center",
+                    padding: "10px 6px",
+                    cursor: "pointer",
+                    background: "rgba(255, 255, 255, 0.4)",
+                    borderRadius: 18,
+                    border: "1px solid rgba(255, 255, 255, 0.6)",
+                    transition: "all 0.2s ease",
+                  }}
                 >
-                  {badge.icon}
+                  {/* Icon Container with soft rounded card shape */}
+                  <div style={{
+                    width: 58,
+                    height: 58,
+                    borderRadius: 16,
+                    background: "rgba(255, 255, 255, 0.85)",
+                    border: "1px solid rgba(255, 255, 255, 0.95)",
+                    boxShadow: "0 6px 16px rgba(0, 0, 0, 0.04)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 8,
+                  }}>
+                    {badge.icon}
+                  </div>
+                  <div style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "#18181b",
+                    lineHeight: 1.3,
+                    whiteSpace: "pre-line",
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  }}>
+                    {badge.title}
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "#18181b",
-                  lineHeight: 1.3,
-                  whiteSpace: "pre-line",
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                }}>
-                  {badge.title}
-                </div>
-              </div>
+              </Tilt3DWrapper>
             ))}
           </div>
         </div>
 
-        {/* Right Column: Visual Hero Composition & Smartphone Mockup */}
+        {/* Right Column: Interactive 3D WebGL Core & 3D Spatial Mockup */}
         <div style={{
           position: "relative",
           display: "flex",
+          flexDirection: "column",
           justifyContent: "center",
-          alignItems: "center",
+          width: "100%",
         }}>
+          {/* 3D Scene Status Indicator */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 10,
+            padding: "0 4px",
+          }}>
+            <div style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "rgba(35, 122, 68, 0.08)",
+              padding: "4px 12px",
+              borderRadius: 20,
+              border: "1px solid rgba(35, 122, 68, 0.2)",
+              fontSize: isMobile ? 11 : 12,
+              fontWeight: 700,
+              color: "#237a44",
+            }}>
+              <span>🍏</span>
+              <span>3D Interactive Nutrition Core</span>
+            </div>
+
+            <div style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: "#237a44",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "rgba(35, 122, 68, 0.08)",
+              padding: "4px 12px",
+              borderRadius: 20,
+              border: "1px solid rgba(35, 122, 68, 0.2)",
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#237a44", display: "inline-block" }}></span>
+              <span>WebGL 3D Active</span>
+            </div>
+          </div>
+
           <div style={{
             position: "relative",
             width: "100%",
-            maxWidth: 620,
-            borderRadius: 28,
+            height: isMobile ? 330 : 490,
+            minHeight: isMobile ? 330 : 490,
+            background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.95) 0%, rgba(246, 241, 235, 0.6) 80%)",
+            borderRadius: isMobile ? 20 : 28,
+            border: "1px solid rgba(0, 0, 0, 0.06)",
+            boxShadow: "0 24px 60px -15px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0,0,0,0.1)",
             overflow: "hidden",
-            boxShadow: "0 24px 60px -15px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0,0,0,0.1)",
-            transition: "transform 0.3s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            touchAction: "pan-y",
           }}>
-            <picture>
-              <source srcSet="/hero-dish-blend@2x.png 2x, /hero-dish-blend.png 1x" type="image/png" />
-              <img
-                src="/hero-dish-blend.png"
-                alt="Nutritious Bowl and Calorie Tracking App"
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  display: "block",
-                  objectFit: "contain",
-                }}
-              />
-            </picture>
+            {/* Three.js 3D WebGL Canvas */}
+            <Hero3DCanvas style={{ width: "100%", height: isMobile ? 330 : 490 }} />
 
-            {/* Subtle Interactive Floating Badge */}
-            <div
-              onClick={handleCalculateNow}
-              style={{
-                position: "absolute",
-                bottom: 24,
-                left: 24,
-                background: "rgba(255, 255, 255, 0.95)",
-                backdropFilter: "blur(12px)",
-                padding: "8px 16px",
-                borderRadius: 20,
-                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+            {/* Floating 3D Badge 1: Daily Target Calorie */}
+            <div style={{
+              position: "absolute",
+              top: isMobile ? 12 : 20,
+              left: isMobile ? 12 : 20,
+              background: "rgba(255, 255, 255, 0.92)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255, 255, 255, 0.8)",
+              padding: isMobile ? "6px 10px" : "10px 14px",
+              borderRadius: isMobile ? 12 : 16,
+              boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+              display: "flex",
+              alignItems: "center",
+              gap: isMobile ? 6 : 10,
+              pointerEvents: "none",
+            }}>
+              <div style={{
+                width: isMobile ? 26 : 32,
+                height: isMobile ? 26 : 32,
+                borderRadius: "50%",
+                background: "rgba(35, 122, 68, 0.12)",
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
-                cursor: "pointer",
-                border: "1px solid rgba(35, 122, 68, 0.15)",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.04)")}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-            >
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#237a44" }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#18181b" }}>
-                Interactive Calorie Calculator Active
-              </span>
+                justifyContent: "center",
+                color: "#237a44",
+                fontSize: isMobile ? 13 : 16,
+              }}>
+                🍏
+              </div>
+              <div>
+                <div style={{ fontSize: isMobile ? 9 : 10, fontWeight: 700, color: "#71717a", textTransform: "uppercase" }}>Daily Target</div>
+                <div style={{ fontSize: isMobile ? 12 : 14, fontWeight: 800, color: "#18181b" }}>2,150 kcal</div>
+              </div>
+            </div>
+
+            {/* Floating 3D Badge 2: Orbiting Macro Rings */}
+            <div style={{
+              position: "absolute",
+              top: isMobile ? 12 : 20,
+              right: isMobile ? 12 : 20,
+              background: "rgba(255, 255, 255, 0.92)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255, 255, 255, 0.8)",
+              padding: isMobile ? "6px 10px" : "10px 14px",
+              borderRadius: isMobile ? 12 : 16,
+              boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+              pointerEvents: "none",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: isMobile ? 9 : 11, fontWeight: 700, color: "#18181b" }}>
+                <span style={{ width: isMobile ? 6 : 8, height: isMobile ? 6 : 8, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
+                <span>Protein: 145g</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: isMobile ? 9 : 11, fontWeight: 700, color: "#18181b" }}>
+                <span style={{ width: isMobile ? 6 : 8, height: isMobile ? 6 : 8, borderRadius: "50%", background: "#f59e0b", display: "inline-block" }} />
+                <span>Carbs: 230g</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: isMobile ? 9 : 11, fontWeight: 700, color: "#18181b" }}>
+                <span style={{ width: isMobile ? 6 : 8, height: isMobile ? 6 : 8, borderRadius: "50%", background: "#f43f5e", display: "inline-block" }} />
+                <span>Fats: 58g</span>
+              </div>
+            </div>
+
+            {/* Bottom Interactive Hint */}
+            <div style={{
+              position: "absolute",
+              bottom: isMobile ? 10 : 16,
+              background: "rgba(24, 24, 27, 0.75)",
+              color: "#ffffff",
+              backdropFilter: "blur(8px)",
+              padding: isMobile ? "4px 10px" : "6px 14px",
+              borderRadius: 20,
+              fontSize: isMobile ? 10 : 11,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              pointerEvents: "none",
+            }}>
+              <span>✨ {isMobile ? "Touch & swipe to rotate 3D core" : "Move cursor to rotate & tilt 3D calorie core"}</span>
             </div>
           </div>
         </div>
@@ -777,73 +917,156 @@ export default function LandingPage({ onOpenAuth, onOpenAdmin, onDemoLogin, them
               </div>
             </div>
 
-            {/* Right Results: Matching the Phone Screen Design */}
-            <div style={{
-              background: "#ffffff",
-              borderRadius: 20,
-              padding: "24px 20px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "space-between",
-              border: "1px solid rgba(0,0,0,0.06)",
-              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.04)",
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#71717a", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Daily Calorie Target
-              </div>
-
-              {/* Circular Gauge Ring (identical to phone mockup) */}
+            {/* Right Results: Interactive 3D Torus Gauge / Matching Phone Screen */}
+            <Tilt3DWrapper maxTilt={8} scale={1.01} style={{ borderRadius: 20 }}>
               <div style={{
-                position: "relative",
-                width: 170,
-                height: 170,
-                margin: "16px 0",
+                background: "#ffffff",
+                borderRadius: 20,
+                padding: "22px 20px",
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: "space-between",
+                border: "1px solid rgba(0,0,0,0.06)",
+                boxShadow: "0 10px 30px rgba(0, 0, 0, 0.04)",
+                minHeight: 400,
               }}>
-                <svg width="170" height="170" viewBox="0 0 170 170">
-                  {/* Background Track Ring */}
-                  <circle
-                    cx="85"
-                    cy="85"
-                    r="72"
-                    fill="none"
-                    stroke="#f4f4f5"
-                    strokeWidth="14"
-                  />
-                  {/* Green Progress Ring */}
-                  <circle
-                    cx="85"
-                    cy="85"
-                    r="72"
-                    fill="none"
-                    stroke="#237a44"
-                    strokeWidth="14"
-                    strokeLinecap="round"
-                    strokeDasharray={2 * Math.PI * 72}
-                    strokeDashoffset={2 * Math.PI * 72 * 0.28}
-                    transform="rotate(-90 85 85)"
-                  />
-                </svg>
-
-                {/* Inner Text Value */}
-                <div style={{ position: "absolute", textAlign: "center" }}>
-                  <div style={{
-                    fontSize: 34,
-                    fontWeight: 800,
-                    fontFamily: "'Outfit', sans-serif",
-                    color: "#18181b",
-                    lineHeight: 1,
-                  }}>
-                    {results.target}
+                {/* Header with 3D / 2D Toggle */}
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  marginBottom: 8,
+                }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#71717a", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Daily Calorie Target
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#71717a", marginTop: 4 }}>
-                    / {results.target} kcal
+                  <div style={{
+                    display: "inline-flex",
+                    background: "#f4efe9",
+                    borderRadius: 20,
+                    padding: 2,
+                    border: "1px solid rgba(0,0,0,0.06)",
+                  }}>
+                    <button
+                      type="button"
+                      onClick={() => setCalcViewMode("3d")}
+                      style={{
+                        padding: "3px 10px",
+                        borderRadius: 20,
+                        border: "none",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        background: calcViewMode === "3d" ? "#237a44" : "transparent",
+                        color: calcViewMode === "3d" ? "#ffffff" : "#71717a",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      3D Torus
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCalcViewMode("2d")}
+                      style={{
+                        padding: "3px 10px",
+                        borderRadius: 20,
+                        border: "none",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        background: calcViewMode === "2d" ? "#237a44" : "transparent",
+                        color: calcViewMode === "2d" ? "#ffffff" : "#71717a",
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      2D Flat
+                    </button>
                   </div>
                 </div>
-              </div>
+
+                {calcViewMode === "3d" ? (
+                  <div style={{ position: "relative", width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    {/* Real-time 3D Torus WebGL Canvas */}
+                    <Calculator3DCanvas
+                      targetCalories={results.target}
+                      tdee={results.tdee}
+                      goal={calcGoal}
+                      protein={results.protein}
+                      carbs={results.carbs}
+                      fat={results.fat}
+                      style={{ height: 180, width: "100%" }}
+                    />
+                    <div style={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      textAlign: "center",
+                      pointerEvents: "none",
+                    }}>
+                      <div style={{
+                        fontSize: 32,
+                        fontWeight: 800,
+                        fontFamily: "'Outfit', sans-serif",
+                        color: "#18181b",
+                        lineHeight: 1,
+                        textShadow: "0 2px 10px rgba(255,255,255,0.9)",
+                      }}>
+                        {results.target}
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#237a44", marginTop: 2 }}>
+                        kcal / day
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 10, color: "#a1a1aa", fontWeight: 600, marginTop: -6, marginBottom: 10 }}>
+                      ✨ Move cursor over 3D torus to tilt ring
+                    </div>
+                  </div>
+                ) : (
+                  /* Circular Gauge Ring (identical to phone mockup) */
+                  <div style={{
+                    position: "relative",
+                    width: 170,
+                    height: 170,
+                    margin: "16px 0",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <svg width="170" height="170" viewBox="0 0 170 170">
+                      <circle cx="85" cy="85" r="72" fill="none" stroke="#f4f4f5" strokeWidth="14" />
+                      <circle
+                        cx="85"
+                        cy="85"
+                        r="72"
+                        fill="none"
+                        stroke="#237a44"
+                        strokeWidth="14"
+                        strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 72}
+                        strokeDashoffset={2 * Math.PI * 72 * 0.28}
+                        transform="rotate(-90 85 85)"
+                      />
+                    </svg>
+
+                    <div style={{ position: "absolute", textAlign: "center" }}>
+                      <div style={{
+                        fontSize: 34,
+                        fontWeight: 800,
+                        fontFamily: "'Outfit', sans-serif",
+                        color: "#18181b",
+                        lineHeight: 1,
+                      }}>
+                        {results.target}
+                      </div>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#71717a", marginTop: 4 }}>
+                        / {results.target} kcal
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               {/* Macro Nutrients Row */}
               <div style={{
@@ -891,6 +1114,7 @@ export default function LandingPage({ onOpenAuth, onOpenAdmin, onDemoLogin, them
                 Save My Plan & Track Meals →
               </button>
             </div>
+            </Tilt3DWrapper>
           </div>
         </div>
       </section>
@@ -955,61 +1179,55 @@ export default function LandingPage({ onOpenAuth, onOpenAdmin, onDemoLogin, them
               badge: "Smart Guard",
             },
           ].map((ft, i) => (
-            <div
-              key={i}
-              style={{
-                background: "#ffffff",
-                border: "1px solid rgba(0, 0, 0, 0.06)",
-                borderRadius: 20,
-                padding: "26px 22px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                boxShadow: "0 4px 18px rgba(0, 0, 0, 0.03)",
-                transition: "transform 0.2s ease, box-shadow 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-3px)";
-                e.currentTarget.style.boxShadow = "0 10px 26px rgba(0, 0, 0, 0.06)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 4px 18px rgba(0, 0, 0, 0.03)";
-              }}
-            >
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <div style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 14,
-                    background: "rgba(35, 122, 68, 0.08)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 24,
-                  }}>
-                    {ft.icon}
+            <Tilt3DWrapper key={i} maxTilt={10} scale={1.02} style={{ borderRadius: 20 }}>
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid rgba(0, 0, 0, 0.06)",
+                  borderRadius: 20,
+                  padding: "26px 22px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  boxShadow: "0 6px 20px rgba(0, 0, 0, 0.04)",
+                  height: "100%",
+                  boxSizing: "border-box",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <div style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 14,
+                      background: "rgba(35, 122, 68, 0.08)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 24,
+                    }}>
+                      {ft.icon}
+                    </div>
+                    <span style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      padding: "4px 10px",
+                      borderRadius: 20,
+                      background: "rgba(0,0,0,0.04)",
+                      color: "#237a44",
+                    }}>
+                      {ft.badge}
+                    </span>
                   </div>
-                  <span style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: "4px 10px",
-                    borderRadius: 20,
-                    background: "rgba(0,0,0,0.04)",
-                    color: "#237a44",
-                  }}>
-                    {ft.badge}
-                  </span>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#18181b", marginBottom: 8 }}>
+                    {ft.title}
+                  </h3>
+                  <p style={{ fontSize: 14, color: "#52525b", lineHeight: 1.6 }}>
+                    {ft.desc}
+                  </p>
                 </div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#18181b", marginBottom: 8 }}>
-                  {ft.title}
-                </h3>
-                <p style={{ fontSize: 14, color: "#52525b", lineHeight: 1.6 }}>
-                  {ft.desc}
-                </p>
               </div>
-            </div>
+            </Tilt3DWrapper>
           ))}
         </div>
       </section>
