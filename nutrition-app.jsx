@@ -930,12 +930,401 @@ function MobileBottomNav({ page, setPage, onOpenAdmin, isAuthorizedAdmin, COLORS
   );
 }
 
+// ─── GOOGLE SIGN-IN MODAL ──────────────────────────────────────────
+function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, isMobile }) {
+  const [activeTab, setActiveTab] = useState("select"); // 'select' | 'custom'
+  const [customEmail, setCustomEmail] = useState("");
+  const [customName, setCustomName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  if (!isOpen) return null;
+
+  const handleSignIn = async (email, name) => {
+    const safeEmail = (email || "").trim().toLowerCase();
+    const safeName = (name || safeEmail.split("@")[0] || "Google User").trim();
+
+    if (!safeEmail || !safeEmail.includes("@")) {
+      setError("Please enter a valid Google email address.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: safeEmail,
+          name: safeName,
+          avatar: safeName.charAt(0).toUpperCase() || "G"
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Google sign in failed.");
+      }
+
+      // If in admin mode, verify the account is an authorized admin
+      if (isAdminMode && data.user.role !== "admin") {
+        throw new Error(`Access denied: Google account ${safeEmail} does not have administrator privileges. Please sign in with an authorized admin account (anshumand108@gmail.com).`);
+      }
+
+      setStoredToken(data.token);
+      setStoredUser(data.user);
+      onSuccess(data.user);
+    } catch (err) {
+      setError(err.message || "Google authentication failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0, 0, 0, 0.65)",
+      backdropFilter: "blur(10px)",
+      WebkitBackdropFilter: "blur(10px)",
+      zIndex: 10001,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+      animation: "fadeIn 0.2s ease",
+    }}>
+      <div style={{
+        background: "#ffffff",
+        borderRadius: 24,
+        padding: isMobile ? 24 : 36,
+        width: "100%",
+        maxWidth: 440,
+        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+        position: "relative",
+        border: "1px solid rgba(0, 0, 0, 0.08)",
+        overflow: "hidden",
+      }}>
+        {/* Animated Google loading bar on top when busy */}
+        {loading && (
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            background: "linear-gradient(90deg, #4285F4, #34A853, #FBBC05, #EA4335)",
+            backgroundSize: "200% 100%",
+            animation: "pulseGlow 1s infinite alternate",
+          }} />
+        )}
+
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          disabled={loading}
+          style={{
+            position: "absolute",
+            top: 18,
+            right: 18,
+            background: "none",
+            border: "none",
+            fontSize: 20,
+            cursor: "pointer",
+            color: "#71717a",
+            width: 32,
+            height: 32,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: "50%",
+          }}
+        >
+          ✕
+        </button>
+
+        {/* Google Header */}
+        <div style={{ textAlign: "center", marginBottom: 22 }}>
+          <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: 12 }}>
+            <svg width="40" height="40" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+          </div>
+          <h3 style={{
+            fontSize: 21,
+            fontWeight: 700,
+            fontFamily: "'Outfit', sans-serif",
+            color: "#18181b",
+            margin: "0 0 6px 0",
+          }}>
+            Sign in with Google
+          </h3>
+          <p style={{ fontSize: 13, color: "#71717a", margin: 0, lineHeight: 1.5 }}>
+            {isAdminMode ? "Choose an authorized Google account to unlock Admin Console" : "Choose an account to continue to Calory Calculator"}
+          </p>
+        </div>
+
+        {/* Error banner */}
+        {error && (
+          <div style={{
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#b91c1c",
+            borderRadius: 12,
+            padding: "10px 14px",
+            fontSize: 13,
+            marginBottom: 16,
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 8,
+            lineHeight: 1.4,
+          }}>
+            <span style={{ fontSize: 16 }}>⚠️</span>
+            <span>{error}</span>
+          </div>
+        )}
+
+        {activeTab === "select" ? (
+          <div>
+            {/* Account Selector Cards */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+              {/* Primary Account: Anshuman Das */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleSignIn("anshumand108@gmail.com", "Anshuman Das")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  width: "100%",
+                  padding: "12px 14px",
+                  background: "#ffffff",
+                  border: "1px solid #e4e4e7",
+                  borderRadius: 14,
+                  cursor: loading ? "wait" : "pointer",
+                  textAlign: "left",
+                  transition: "all 0.15s ease",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "#1a73e8";
+                  e.currentTarget.style.background = "#f8fafd";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(26,115,232,0.1)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "#e4e4e7";
+                  e.currentTarget.style.background = "#ffffff";
+                  e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
+                }}
+              >
+                <div style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: "50%",
+                  background: "#1a73e8",
+                  color: "#ffffff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 18,
+                  fontWeight: 700,
+                  flexShrink: 0,
+                  boxShadow: "0 2px 6px rgba(26,115,232,0.3)",
+                }}>
+                  A
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#18181b" }}>Anshuman Das</span>
+                    <span style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      background: "rgba(35, 122, 68, 0.12)",
+                      color: "#237a44",
+                      padding: "1px 6px",
+                      borderRadius: 6,
+                    }}>
+                      ADMIN
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    anshumand108@gmail.com
+                  </div>
+                </div>
+                <div style={{ color: "#1a73e8", fontSize: 13, fontWeight: 600 }}>
+                  {loading ? "Signing in..." : "Select →"}
+                </div>
+              </button>
+
+              {/* Use Another Google Account */}
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => { setActiveTab("custom"); setError(""); }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                  width: "100%",
+                  padding: "12px 14px",
+                  background: "transparent",
+                  border: "1px dashed #d4d4d8",
+                  borderRadius: 14,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  color: "#18181b",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  transition: "all 0.15s ease",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#1a73e8"; e.currentTarget.style.background = "#fafaf9"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#d4d4d8"; e.currentTarget.style.background = "transparent"; }}
+              >
+                <div style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: "50%",
+                  background: "#f4efe9",
+                  color: "#52525b",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 18,
+                  flexShrink: 0,
+                }}>
+                  👤+
+                </div>
+                <span style={{ flex: 1 }}>Sign in with another Google account</span>
+                <span style={{ color: "#71717a", fontSize: 14 }}>›</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSignIn(customEmail, customName);
+            }}
+            style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}
+          >
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#27272a", marginBottom: 6 }}>
+                Google Email Address
+              </label>
+              <input
+                type="email"
+                value={customEmail}
+                onChange={(e) => setCustomEmail(e.target.value)}
+                placeholder="your.email@gmail.com"
+                required
+                autoFocus
+                style={{
+                  width: "100%",
+                  padding: "11px 14px",
+                  borderRadius: 12,
+                  border: "1px solid #d4d4d8",
+                  fontSize: 14,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#27272a", marginBottom: 6 }}>
+                Account Name (Optional)
+              </label>
+              <input
+                type="text"
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                placeholder="Full Name"
+                style={{
+                  width: "100%",
+                  padding: "11px 14px",
+                  borderRadius: 12,
+                  border: "1px solid #d4d4d8",
+                  fontSize: 14,
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+              <button
+                type="button"
+                onClick={() => { setActiveTab("select"); setError(""); }}
+                style={{
+                  flex: 1,
+                  background: "#f4f4f5",
+                  border: "1px solid #e4e4e7",
+                  borderRadius: 12,
+                  padding: "11px 0",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  color: "#27272a",
+                }}
+              >
+                ← Back
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  flex: 2,
+                  background: "#1a73e8",
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "11px 0",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: loading ? "wait" : "pointer",
+                  color: "#ffffff",
+                  boxShadow: "0 2px 8px rgba(26,115,232,0.3)",
+                }}
+              >
+                {loading ? "Verifying..." : "Continue with Google →"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Google Terms Footer */}
+        <div style={{
+          borderTop: "1px solid #f4f4f5",
+          paddingTop: 12,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          fontSize: 11,
+          color: "#a1a1aa",
+        }}>
+          <span>English (United States)</span>
+          <div style={{ display: "flex", gap: 10 }}>
+            <span style={{ cursor: "pointer" }}>Help</span>
+            <span style={{ cursor: "pointer" }}>Privacy</span>
+            <span style={{ cursor: "pointer" }}>Terms</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── AUTH MODAL / POPUP ───────────────────────────────────────────
 function AuthModal({ onLogin, onClose, initialMode = "login", COLORS, S, isMobile }) {
   const [mode, setMode] = useState(initialMode);
   const [form, setForm] = useState({ name: "", email: "", password: "", age: "", weight: "", height: "", goal: "maintain" });
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleModalOpen, setGoogleModalOpen] = useState(false);
 
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
@@ -981,48 +1370,6 @@ function AuthModal({ onLogin, onClose, initialMode = "login", COLORS, S, isMobil
     }
   };
 
-  const [googleChooserOpen, setGoogleChooserOpen] = useState(false);
-  const [showCustomGoogle, setShowCustomGoogle] = useState(false);
-  const [customName, setCustomName] = useState("");
-  const [customEmail, setCustomEmail] = useState("");
-
-  const executeGoogleLogin = async (googleName, googleEmail) => {
-    setErr("");
-    setLoading(true);
-    try {
-      const safeName = (googleName || "Google User").trim();
-      const safeEmail = (googleEmail || "google.user@gmail.com").trim().toLowerCase();
-      const res = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: safeEmail,
-          name: safeName,
-          avatar: safeName.charAt(0).toUpperCase() || "G"
-        })
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Google authentication failed");
-      setStoredToken(result.token);
-      setStoredUser(result.user);
-      setGoogleChooserOpen(false);
-      onLogin(result.user);
-    } catch (error) {
-      setErr(error.message || "Google login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = () => {
-    setErr("");
-    if (form.email && form.email.includes("@")) {
-      executeGoogleLogin(form.name || form.email.split("@")[0], form.email);
-    } else {
-      setGoogleChooserOpen(true);
-    }
-  };
-
   return (
     <div style={{
       position: "fixed",
@@ -1045,7 +1392,7 @@ function AuthModal({ onLogin, onClose, initialMode = "login", COLORS, S, isMobil
       }}>
         {/* Back / Close button */}
         <button
-          onClick={googleChooserOpen ? () => { setGoogleChooserOpen(false); setShowCustomGoogle(false); setErr(""); } : onClose}
+          onClick={onClose}
           style={{
             position: "absolute",
             top: 16,
@@ -1062,199 +1409,12 @@ function AuthModal({ onLogin, onClose, initialMode = "login", COLORS, S, isMobil
             cursor: "pointer",
             fontSize: 14,
           }}
-          title={googleChooserOpen ? "Back to sign in" : "Back to Landing Page"}
+          title="Back to Landing Page"
         >
           ✕
         </button>
 
-        {googleChooserOpen ? (
-          <div>
-            {/* Google Account Chooser View */}
-            <div style={{ textAlign: "center", marginBottom: 20 }}>
-              <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: 12 }}>
-                <svg width="36" height="36" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
-                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.99 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
-                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                </svg>
-              </div>
-              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, letterSpacing: "-0.01em" }}>
-                Sign in with Google
-              </div>
-              <div style={{ color: COLORS.textMuted, fontSize: 13, marginTop: 4 }}>
-                Choose an account to continue to <strong style={{ color: COLORS.text }}>Calory Calculator</strong>
-              </div>
-            </div>
-
-            {err && (
-              <div style={{ color: COLORS.red, fontSize: 13, marginBottom: 14, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", padding: "10px 14px", borderRadius: 10 }}>
-                {err}
-              </div>
-            )}
-
-            {/* Google Accounts List */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-              {[
-                { name: "Anshuman Das", email: "anshumand108@gmail.com", avatarBg: "#1a73e8", initial: "A" },
-                { name: "Alex Morgan", email: "alex.morgan@gmail.com", avatarBg: "#237a44", initial: "A" },
-              ].map((acc) => (
-                <button
-                  key={acc.email}
-                  type="button"
-                  disabled={loading}
-                  onClick={() => executeGoogleLogin(acc.name, acc.email)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    width: "100%",
-                    padding: "12px 14px",
-                    background: "#ffffff",
-                    border: "1px solid #e4e4e7",
-                    borderRadius: 14,
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all 0.15s ease",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "#237a44";
-                    e.currentTarget.style.background = "#fafaf9";
-                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(35,122,68,0.08)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "#e4e4e7";
-                    e.currentTarget.style.background = "#ffffff";
-                    e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.03)";
-                  }}
-                >
-                  <div style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    background: acc.avatarBg,
-                    color: "#ffffff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 17,
-                    fontWeight: 700,
-                    flexShrink: 0,
-                  }}>
-                    {acc.initial}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>{acc.name}</div>
-                    <div style={{ fontSize: 12, color: COLORS.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {acc.email}
-                    </div>
-                  </div>
-                  <div style={{ color: "#237a44", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-                    {loading ? "Signing in..." : "Continue →"}
-                  </div>
-                </button>
-              ))}
-
-              {/* Use Another Account Option */}
-              {!showCustomGoogle ? (
-                <button
-                  type="button"
-                  onClick={() => setShowCustomGoogle(true)}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 14,
-                    width: "100%",
-                    padding: "12px 14px",
-                    background: "transparent",
-                    border: "1px dashed #d4d4d8",
-                    borderRadius: 14,
-                    cursor: "pointer",
-                    textAlign: "left",
-                    color: COLORS.text,
-                    fontSize: 13,
-                    fontWeight: 600,
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#237a44"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#d4d4d8"; }}
-                >
-                  <div style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    background: "#f4efe9",
-                    color: COLORS.textMuted,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 18,
-                    flexShrink: 0,
-                  }}>
-                    👤+
-                  </div>
-                  <span>Use another Google account</span>
-                </button>
-              ) : (
-                <div style={{ background: "#faf8f5", border: "1px solid #e4e4e7", borderRadius: 14, padding: 14 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: COLORS.text }}>
-                    Enter Google Account Details
-                  </div>
-                  <input
-                    style={{ ...S.input, marginBottom: 8, fontSize: 13 }}
-                    placeholder="Full Name (e.g. John Doe)"
-                    value={customName}
-                    onChange={(e) => setCustomName(e.target.value)}
-                  />
-                  <input
-                    style={{ ...S.input, marginBottom: 10, fontSize: 13 }}
-                    type="email"
-                    placeholder="you@gmail.com"
-                    value={customEmail}
-                    onChange={(e) => setCustomEmail(e.target.value)}
-                  />
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
-                      type="button"
-                      disabled={loading || !customEmail.includes("@")}
-                      onClick={() => executeGoogleLogin(customName || customEmail.split("@")[0], customEmail)}
-                      style={{ ...S.btn, flex: 1, padding: "8px 0", fontSize: 13 }}
-                    >
-                      {loading ? "Connecting..." : "Continue"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowCustomGoogle(false)}
-                      style={{ background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: 10, padding: "8px 14px", fontSize: 13, cursor: "pointer" }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 10, borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-              <button
-                type="button"
-                onClick={() => { setGoogleChooserOpen(false); setShowCustomGoogle(false); setErr(""); }}
-                style={{
-                  background: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  color: COLORS.primaryLight,
-                  fontSize: 13,
-                  fontWeight: 600,
-                  padding: 0,
-                }}
-              >
-                ← Back to email sign in
-              </button>
-              <span style={{ fontSize: 11, color: COLORS.textMuted }}>Google Secure Auth</span>
-            </div>
-          </div>
-        ) : (
+        <div>
           <div>
             <div style={{ textAlign: "center", marginBottom: 20 }}>
               <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: 10 }}>
@@ -1287,7 +1447,7 @@ function AuthModal({ onLogin, onClose, initialMode = "login", COLORS, S, isMobil
             {/* Continue with Google Option */}
             <button
               type="button"
-              onClick={handleGoogleLogin}
+              onClick={() => setGoogleModalOpen(true)}
               disabled={loading}
               style={{
                 width: "100%",
@@ -1401,7 +1561,18 @@ function AuthModal({ onLogin, onClose, initialMode = "login", COLORS, S, isMobil
               )}
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Dedicated Google Sign In Modal */}
+        <GoogleSignInModal
+          isOpen={googleModalOpen}
+          onClose={() => setGoogleModalOpen(false)}
+          onSuccess={(u) => {
+            setGoogleModalOpen(false);
+            onLogin(u);
+          }}
+          isMobile={isMobile}
+        />
       </div>
     </div>
   );
@@ -3052,6 +3223,7 @@ function AdminAuthModal({ isOpen, onClose, onAdminSuccess, isMobile }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [googleModalOpen, setGoogleModalOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -3078,31 +3250,6 @@ function AdminAuthModal({ isOpen, onClose, onAdminSuccess, isMobile }) {
       onAdminSuccess(data.user);
     } catch (err) {
       setError(err.message || "Invalid Admin User ID or Password.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleAdminLogin = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: "anshumand108@gmail.com",
-          name: "Anshuman Das",
-          avatar: "A"
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Google Admin sign in failed");
-      setStoredToken(data.token);
-      setStoredUser(data.user);
-      onAdminSuccess(data.user);
-    } catch (err) {
-      setError(err.message || "Google admin sign in failed.");
     } finally {
       setLoading(false);
     }
@@ -3285,7 +3432,7 @@ function AdminAuthModal({ isOpen, onClose, onAdminSuccess, isMobile }) {
 
         <button
           type="button"
-          onClick={handleGoogleAdminLogin}
+          onClick={() => setGoogleModalOpen(true)}
           disabled={loading}
           style={{
             width: "100%",
@@ -3312,6 +3459,18 @@ function AdminAuthModal({ isOpen, onClose, onAdminSuccess, isMobile }) {
           </svg>
           <span>Continue with Google (Admin)</span>
         </button>
+
+        {/* Dedicated Google Admin Sign In Modal */}
+        <GoogleSignInModal
+          isOpen={googleModalOpen}
+          onClose={() => setGoogleModalOpen(false)}
+          onSuccess={(adminUser) => {
+            setGoogleModalOpen(false);
+            onAdminSuccess(adminUser);
+          }}
+          isAdminMode={true}
+          isMobile={isMobile}
+        />
       </div>
     </div>
   );
@@ -3455,6 +3614,7 @@ export default function NutritionApp() {
   };
 
   const [adminAuthModalOpen, setAdminAuthModalOpen] = useState(false);
+  const [googleAuthModalOpen, setGoogleAuthModalOpen] = useState(false);
   const isAuthorizedAdmin = Boolean(
     user && (user.role === "admin" || user.email === "anshumand108@gmail.com" || user.email === "admin@nutriai.com")
   );
@@ -3486,7 +3646,13 @@ export default function NutritionApp() {
     return (
       <>
         <LandingPage
-          onOpenAuth={(m) => setAuthModalMode(m || "login")}
+          onOpenAuth={(m) => {
+            if (m === "google") {
+              setGoogleAuthModalOpen(true);
+            } else {
+              setAuthModalMode(m || "login");
+            }
+          }}
           onOpenAdmin={() => {
             setAdminAuthModalOpen(true);
           }}
@@ -3506,6 +3672,15 @@ export default function NutritionApp() {
             isMobile={isMobile}
           />
         )}
+        <GoogleSignInModal
+          isOpen={googleAuthModalOpen}
+          onClose={() => setGoogleAuthModalOpen(false)}
+          onSuccess={(u) => {
+            setGoogleAuthModalOpen(false);
+            handleLogin(u);
+          }}
+          isMobile={isMobile}
+        />
         <AdminAuthModal
           isOpen={adminAuthModalOpen}
           onClose={() => {
