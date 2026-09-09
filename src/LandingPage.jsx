@@ -545,47 +545,6 @@ export default function LandingPage({ onOpenAuth, onOpenAdmin, onDemoLogin, them
           justifyContent: "center",
           width: "100%",
         }}>
-          {/* 3D Scene Status Indicator */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 10,
-            padding: "0 4px",
-          }}>
-            <div style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              background: "rgba(35, 122, 68, 0.08)",
-              padding: "4px 12px",
-              borderRadius: 20,
-              border: "1px solid rgba(35, 122, 68, 0.2)",
-              fontSize: isMobile ? 11 : 12,
-              fontWeight: 700,
-              color: "#237a44",
-            }}>
-              <span>🍏</span>
-              <span>3D Interactive Nutrition Core</span>
-            </div>
-
-            <div style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#237a44",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              background: "rgba(35, 122, 68, 0.08)",
-              padding: "4px 12px",
-              borderRadius: 20,
-              border: "1px solid rgba(35, 122, 68, 0.2)",
-            }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#237a44", display: "inline-block" }}></span>
-              <span>WebGL 3D Active</span>
-            </div>
-          </div>
-
           <div style={{
             position: "relative",
             width: "100%",

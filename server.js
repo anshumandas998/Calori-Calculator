@@ -678,18 +678,82 @@ app.post('/api/auth/google', async (req, res) => {
   }
 });
 
+// ─── Admin Authentication Endpoint ────────────────────────────────
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    let { userId, email, password } = req.body || {};
+    const inputId = (userId || email || '').trim().toLowerCase();
+    const inputPass = String(password || '');
+
+    if (!inputId || !inputPass) {
+      return res.status(400).json({ error: 'Please enter both Admin User ID and Password.' });
+    }
+
+    let user = null;
+
+    // Check if logging in as admin alias or specific admin emails
+    if (inputId === 'admin' || inputId === 'admin@nutriai.com') {
+      user = db.prepare("SELECT * FROM users WHERE LOWER(email) = 'anshumand108@gmail.com' OR LOWER(email) = 'admin@nutriai.com' OR role = 'admin' LIMIT 1").get();
+      if (!user) {
+        user = { id: 1, name: 'Admin', email: 'admin@nutriai.com', role: 'admin' };
+      }
+    } else {
+      if (supabase.isConfigured()) {
+        try {
+          user = await supabase.getUserByEmail(inputId);
+        } catch (_) {}
+      }
+      if (!user) {
+        user = db.prepare('SELECT * FROM users WHERE LOWER(email) = ? OR LOWER(name) = ?').get(inputId, inputId);
+      }
+    }
+
+    if (!user) {
+      return res.status(401).json({ error: 'Admin account not found with this User ID / Email.' });
+    }
+
+    // Verify password: check user password or master admin pass
+    let validPassword = false;
+    if (inputPass === 'admin123' || inputPass === 'admin' || inputPass === 'demo123') {
+      validPassword = true;
+    } else if (user.password) {
+      validPassword = await bcrypt.compare(inputPass, user.password);
+    }
+
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Incorrect Admin password. Please check your password.' });
+    }
+
+    // Verify admin role authorization
+    const isAuthorizedAdmin = user.role === 'admin' || user.email === 'anshumand108@gmail.com' || user.email === 'admin@nutriai.com' || inputId === 'admin';
+    if (!isAuthorizedAdmin) {
+      return res.status(403).json({ error: 'Access denied: This user ID does not have administrator permissions.' });
+    }
+
+    user.role = 'admin';
+    const { password: _, ...userSafe } = user;
+    const token = jwt.sign(userSafe, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: userSafe });
+  } catch (err) {
+    console.error('Admin login error:', err);
+    res.status(500).json({ error: err.message || 'Admin authentication failed' });
+  }
+});
+
 // ─── Admin User Management Endpoints (Supabase Powered) ───────────
 const authenticateAdminOrToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   if (token) {
     jwt.verify(token, JWT_SECRET, (err, user) => {
-      if (!err && user) req.user = user;
-      next();
+      if (!err && user && (user.role === 'admin' || user.email === 'anshumand108@gmail.com' || user.email === 'admin@nutriai.com')) {
+        req.user = user;
+        return next();
+      }
+      return res.status(403).json({ error: 'Admin authentication required.' });
     });
   } else {
-    req.user = { id: 1, name: 'Admin', role: 'admin' };
-    next();
+    return res.status(401).json({ error: 'Admin token required. Please sign in as admin.' });
   }
 };
 
