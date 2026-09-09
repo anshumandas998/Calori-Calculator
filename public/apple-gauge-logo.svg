@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <!-- Apple Body with subtle gradient -->
+  <defs>
+    <linearGradient id="appleGrad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60b666"/>
+      <stop offset="100%" stop-color="#46934c"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#2e7d32" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Leaf & Stem -->
+  <path d="M24 10 C24 6, 26 4, 27 3 C27.5 4, 27.5 6, 25.5 8.5" stroke="#33691e" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M25 8 C29 6, 32 8, 32 11 C28.5 12, 26 10.5, 25 8 Z" fill="#68bb6e"/>
+
+  <!-- Apple Silhouette -->
+  <path d="M24 13 C20 10.5, 12 11, 8.5 16 C4.5 21.5, 5 31, 10 38 C13.5 43, 19 45, 22.5 43.5 C23.5 43, 24.5 43, 25.5 43.5 C29 45, 34.5 43, 38 38 C43 31, 43.5 21.5, 39.5 16 C36 11, 28 10.5, 24 13 Z"
+        fill="url(#appleGrad)" filter="url(#softShadow)"/>
+
+  <!-- Apple Highlight -->
+  <path d="M12 18 C9 23, 9 29, 12 34" stroke="rgba(255,255,255,0.35)" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Speedometer Gauge Arc Inside Apple -->
+  <!-- Outer Gauge Arc -->
+  <path d="M15.5 30 A11 11 0 1 1 32.5 30" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0.1 3.5"/>
+  <!-- Inner Gauge Track -->
+  <path d="M17 28.5 A9 9 0 1 1 31 28.5" stroke="rgba(255,255,255,0.4)" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Needle Base Center Point -->
+  <circle cx="24" cy="26" r="2.2" fill="#ffffff"/>
+  <!-- Needle Pointer (pointing to ~2 o'clock like a calorie gauge) -->
+  <path d="M24 26 L29 20" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+</svg>

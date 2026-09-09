@@ -19,6 +19,7 @@
     "better-sqlite3": true
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.116.0",
     "@vitejs/plugin-react": "^6.0.2",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.10.0",

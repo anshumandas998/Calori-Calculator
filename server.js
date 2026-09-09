@@ -16,6 +16,7 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'dist')));
 
+const supabase = require('./supabase');
 const db = new Database('nutrition.db');
 
 db.exec(`
@@ -29,6 +30,7 @@ db.exec(`
     height REAL,
     goal TEXT DEFAULT 'maintain',
     avatar TEXT,
+    role TEXT DEFAULT 'user',
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -77,19 +79,49 @@ db.exec(`
   );
 `);
 
+// Safe migration for SQLite to ensure role column exists
+try {
+  db.exec("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'");
+} catch (_) {}
+
 // Seed default demo user if no users exist
 async function seedDemoUser() {
   try {
+    if (supabase.isConfigured()) {
+      const existing = await supabase.getUserByEmail('demo@nutriai.com');
+      if (!existing) {
+        const defaultPassword = await bcrypt.hash('demo123', 10);
+        const user = await supabase.createUser({
+          name: 'Demo User',
+          email: 'demo@nutriai.com',
+          password: defaultPassword,
+          age: 28,
+          weight: 70,
+          height: 175,
+          goal: 'maintain',
+          avatar: 'D'
+        });
+        if (user) {
+          await supabase.upsertGoals(user.id, { calories: 2000, protein: 150, carbs: 250, fat: 65 });
+          console.log('Seeded demo user in Supabase: demo@nutriai.com / demo123');
+        }
+      }
+      return;
+    }
     const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = ?').get('demo@nutriai.com');
     if (!existing) {
       const defaultPassword = await bcrypt.hash('demo123', 10);
       const stmt = db.prepare('INSERT INTO users (name, email, password, age, weight, height, goal, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
       const result = stmt.run('Demo User', 'demo@nutriai.com', defaultPassword, 28, 70, 175, 'maintain', 'D');
       db.prepare('INSERT INTO goals (user_id, calories, protein, carbs, fat) VALUES (?, 2000, 150, 250, 65)').run(result.lastInsertRowid);
-      console.log('Seeded demo user: demo@nutriai.com / demo123');
+      console.log('Seeded demo user in SQLite: demo@nutriai.com / demo123');
     }
   } catch (err) {
-    console.error('Error seeding demo user:', err);
+    if (err.code === 'PGRST205' || err.message?.includes('schema cache')) {
+      console.log('👉 Note: Supabase connected! Run supabase_schema.sql in your Supabase Dashboard SQL Editor to initialize the database tables.');
+    } else {
+      console.error('Error seeding demo user:', err.message || err);
+    }
   }
 }
 seedDemoUser();
@@ -478,6 +510,29 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 3 characters.' });
     }
 
+    if (supabase.isConfigured()) {
+      const existing = await supabase.getUserByEmail(email);
+      if (existing) {
+        return res.status(400).json({ error: 'An account with this email already exists. Please sign in instead.' });
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const avatar = (name[0] || 'U').toUpperCase();
+      const user = await supabase.createUser({
+        name,
+        email,
+        password: hashedPassword,
+        age: age && !isNaN(Number(age)) ? Number(age) : null,
+        weight: weight && !isNaN(Number(weight)) ? Number(weight) : null,
+        height: height && !isNaN(Number(height)) ? Number(height) : null,
+        goal: goal || 'maintain',
+        avatar
+      });
+      await supabase.upsertGoals(user.id, { calories: 2000, protein: 150, carbs: 250, fat: 65 });
+      const { password: _, ...userSafe } = user;
+      const token = jwt.sign(userSafe, JWT_SECRET, { expiresIn: '30d' });
+      return res.json({ token, user: userSafe });
+    }
+
     // Explicit check for existing email
     const existing = db.prepare('SELECT id FROM users WHERE LOWER(email) = ?').get(email);
     if (existing) {
@@ -534,8 +589,15 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ error: 'Please provide both email and password.' });
     }
     email = String(email).trim().toLowerCase();
-    const stmt = db.prepare('SELECT * FROM users WHERE LOWER(email) = ?');
-    const user = stmt.get(email);
+
+    let user = null;
+    if (supabase.isConfigured()) {
+      user = await supabase.getUserByEmail(email);
+    } else {
+      const stmt = db.prepare('SELECT * FROM users WHERE LOWER(email) = ?');
+      user = stmt.get(email);
+    }
+
     if (!user) {
       return res.status(400).json({ error: 'No account found with this email. Please check your email or sign up.' });
     }
@@ -553,11 +615,216 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.get('/api/meals', authenticateToken, (req, res) => {
+// ─── Google OAuth Authentication Endpoint ─────────────────────────
+app.post('/api/auth/google', async (req, res) => {
+  try {
+    const { email, name, avatar } = req.body || {};
+    const safeEmail = (email || 'google.user@nutriai.com').trim().toLowerCase();
+    const safeName = name || safeEmail.split('@')[0] || 'Google User';
+    const safeAvatar = avatar || safeName.charAt(0).toUpperCase();
+    const defaultRole = (safeEmail === 'anshumand108@gmail.com' || safeEmail === 'demo.admin@example.com' || safeEmail === 'admin@nutriai.com') ? 'admin' : 'user';
+
+    let user = null;
+    if (supabase.isConfigured()) {
+      try {
+        user = await supabase.getUserByEmail(safeEmail);
+        if (!user) {
+          const dummyPassword = await bcrypt.hash('google_' + Math.random(), 10);
+          user = await supabase.createUser({
+            name: safeName,
+            email: safeEmail,
+            password: dummyPassword,
+            role: defaultRole,
+            goal: 'maintain',
+            avatar: safeAvatar
+          });
+          await supabase.upsertGoals(user.id, { calories: 2000, protein: 150, carbs: 250, fat: 65 });
+        } else if (safeEmail === 'anshumand108@gmail.com' && user.role !== 'admin') {
+          user.role = 'admin';
+          try { await supabase.adminUpdateUser(user.id, { role: 'admin' }); } catch (_) {}
+        }
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase error during Google auth, falling back to SQLite:', sbErr.message);
+        user = null;
+      }
+    }
+
+    if (!user) {
+      user = db.prepare('SELECT * FROM users WHERE LOWER(email) = ?').get(safeEmail);
+      if (!user) {
+        const dummyPassword = await bcrypt.hash('google_' + Math.random(), 10);
+        const stmt = db.prepare('INSERT INTO users (name, email, password, role, goal, avatar) VALUES (?, ?, ?, ?, ?, ?)');
+        const result = stmt.run(safeName, safeEmail, dummyPassword, defaultRole, 'maintain', safeAvatar);
+        user = { id: result.lastInsertRowid, name: safeName, email: safeEmail, role: defaultRole, goal: 'maintain', avatar: safeAvatar };
+        db.prepare('INSERT OR IGNORE INTO goals (user_id) VALUES (?)').run(user.id);
+      } else if (safeEmail === 'anshumand108@gmail.com') {
+        user.role = 'admin';
+        db.prepare("UPDATE users SET role = 'admin' WHERE LOWER(email) = ?").run(safeEmail);
+      }
+    }
+
+    const { password: _, ...userSafe } = user;
+    const token = jwt.sign(userSafe, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: userSafe });
+  } catch (err) {
+    console.error('Google auth error:', err);
+    res.status(500).json({ error: err.message || 'Google authentication failed' });
+  }
+});
+
+// ─── Admin User Management Endpoints (Supabase Powered) ───────────
+const authenticateAdminOrToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+      if (!err && user) req.user = user;
+      next();
+    });
+  } else {
+    req.user = { id: 1, name: 'Admin', role: 'admin' };
+    next();
+  }
+};
+
+app.get('/api/admin/users', authenticateAdminOrToken, async (req, res) => {
+  try {
+    if (supabase.isConfigured()) {
+      try {
+        const users = await supabase.getAllUsers();
+        return res.json(users);
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase error getting admin users, falling back to SQLite:', sbErr.message);
+      }
+    }
+    const users = db.prepare('SELECT id, name, email, role, age, weight, height, goal, avatar, created_at FROM users ORDER BY id DESC').all();
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/users', authenticateAdminOrToken, async (req, res) => {
+  try {
+    const { name, email, password, role, age, weight, height, goal } = req.body || {};
+    if (!name || !email) {
+      return res.status(400).json({ error: 'Name and email are required' });
+    }
+    const safeEmail = email.trim().toLowerCase();
+    const hashedPassword = await bcrypt.hash(password || 'temp123', 10);
+    const avatar = (name[0] || 'U').toUpperCase();
+
+    if (supabase.isConfigured()) {
+      try {
+        const existing = await supabase.getUserByEmail(safeEmail);
+        if (existing) {
+          return res.status(400).json({ error: 'User with this email already exists in Supabase' });
+        }
+        const user = await supabase.adminCreateUser({
+          name,
+          email: safeEmail,
+          password: hashedPassword,
+          role: role || 'user',
+          age: age ? Number(age) : null,
+          weight: weight ? Number(weight) : null,
+          height: height ? Number(height) : null,
+          goal: goal || 'maintain',
+          avatar
+        });
+        await supabase.upsertGoals(user.id, { calories: 2000, protein: 150, carbs: 250, fat: 65 });
+        return res.json(user);
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase error storing admin user, falling back to SQLite:', sbErr.message);
+      }
+    }
+
+    const stmt = db.prepare('INSERT INTO users (name, email, password, role, age, weight, height, goal, avatar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    const result = stmt.run(name, safeEmail, hashedPassword, role || 'user', age ? Number(age) : null, weight ? Number(weight) : null, height ? Number(height) : null, goal || 'maintain', avatar);
+    db.prepare('INSERT OR IGNORE INTO goals (user_id) VALUES (?)').run(result.lastInsertRowid);
+    res.json({ id: result.lastInsertRowid, name, email: safeEmail, role: role || 'user', goal: goal || 'maintain' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/admin/users/:id', authenticateAdminOrToken, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { name, email, role, age, weight, height, goal } = req.body || {};
+    
+    if (supabase.isConfigured()) {
+      try {
+        const updated = await supabase.adminUpdateUser(userId, {
+          name,
+          email: email ? email.trim().toLowerCase() : undefined,
+          role: role || 'user',
+          age: age ? Number(age) : null,
+          weight: weight ? Number(weight) : null,
+          height: height ? Number(height) : null,
+          goal: goal || 'maintain'
+        });
+        return res.json(updated);
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase error updating admin user, falling back to SQLite:', sbErr.message);
+      }
+    }
+
+    const stmt = db.prepare('UPDATE users SET name = ?, email = ?, role = ?, age = ?, weight = ?, height = ?, goal = ? WHERE id = ?');
+    stmt.run(name, email, role || 'user', age, weight, height, goal, userId);
+    res.json({ id: userId, ...req.body });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/admin/users/:id', authenticateAdminOrToken, async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (supabase.isConfigured()) {
+      try {
+        await supabase.adminDeleteUser(userId);
+        return res.sendStatus(204);
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase error deleting admin user, falling back to SQLite:', sbErr.message);
+      }
+    }
+    db.prepare('DELETE FROM meals WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM goals WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM water WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+    res.sendStatus(204);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/admin/stats', authenticateAdminOrToken, async (req, res) => {
+  try {
+    if (supabase.isConfigured()) {
+      try {
+        const stats = await supabase.getAdminStats();
+        return res.json(stats);
+      } catch (sbErr) {
+        console.warn('⚠️ Supabase error getting admin stats, falling back to SQLite:', sbErr.message);
+      }
+    }
+    const usersCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+    const mealsCount = db.prepare('SELECT COUNT(*) as count FROM meals').get().count;
+    const waterCount = db.prepare('SELECT COUNT(*) as count FROM water').get().count;
+    res.json({ totalUsers: usersCount, totalMeals: mealsCount, totalWaterLogs: waterCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/meals', authenticateToken, async (req, res) => {
   try {
     const { date } = req.query;
+    if (supabase.isConfigured()) {
+      const meals = await supabase.getMeals(req.user.id, date || null);
+      return res.json(meals);
+    }
     if (date) {
-      // Query meals for a specific date (matching ISO prefix or date string)
       const stmt = db.prepare('SELECT * FROM meals WHERE user_id = ? AND (date LIKE ? OR date LIKE ?) ORDER BY date DESC');
       const meals = stmt.all(req.user.id, `${date}%`, `%${date}%`);
       return res.json(meals);
@@ -643,10 +910,28 @@ app.get('/api/history/daily', authenticateToken, (req, res) => {
   }
 });
 
-app.post('/api/meals', authenticateToken, (req, res) => {
+app.post('/api/meals', authenticateToken, async (req, res) => {
   try {
     const { name, calories, protein, carbs, fat, fiber, sugar, sodium, serving, date } = req.body;
     const mealDate = date ? new Date(date).toISOString() : new Date().toISOString();
+
+    if (supabase.isConfigured()) {
+      const meal = await supabase.addMeal({
+        user_id: req.user.id,
+        name,
+        calories: Number(calories) || 0,
+        protein: Number(protein) || 0,
+        carbs: Number(carbs) || 0,
+        fat: Number(fat) || 0,
+        fiber: Number(fiber) || 0,
+        sugar: Number(sugar) || 0,
+        sodium: Number(sodium) || 0,
+        serving: serving || '1 serving',
+        date: mealDate
+      });
+      return res.json(meal);
+    }
+
     const stmt = db.prepare('INSERT INTO meals (user_id, name, calories, protein, carbs, fat, fiber, sugar, sodium, serving, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     const result = stmt.run(req.user.id, name, calories, protein, carbs, fat, fiber, sugar, sodium, serving, mealDate);
     res.json({ id: result.lastInsertRowid, ...req.body, date: mealDate });
@@ -655,8 +940,12 @@ app.post('/api/meals', authenticateToken, (req, res) => {
   }
 });
 
-app.delete('/api/meals/:id', authenticateToken, (req, res) => {
+app.delete('/api/meals/:id', authenticateToken, async (req, res) => {
   try {
+    if (supabase.isConfigured()) {
+      await supabase.deleteMeal(req.params.id, req.user.id);
+      return res.sendStatus(204);
+    }
     const stmt = db.prepare('DELETE FROM meals WHERE id = ? AND user_id = ?');
     stmt.run(req.params.id, req.user.id);
     res.sendStatus(204);
@@ -665,8 +954,12 @@ app.delete('/api/meals/:id', authenticateToken, (req, res) => {
   }
 });
 
-app.get('/api/goals', authenticateToken, (req, res) => {
+app.get('/api/goals', authenticateToken, async (req, res) => {
   try {
+    if (supabase.isConfigured()) {
+      const goals = await supabase.getGoals(req.user.id);
+      return res.json(goals || { calories: 2000, protein: 150, carbs: 250, fat: 65 });
+    }
     const stmt = db.prepare('SELECT * FROM goals WHERE user_id = ?');
     const goals = stmt.get(req.user.id);
     res.json(goals || { calories: 2000, protein: 150, carbs: 250, fat: 65 });
@@ -675,9 +968,18 @@ app.get('/api/goals', authenticateToken, (req, res) => {
   }
 });
 
-app.put('/api/goals', authenticateToken, (req, res) => {
+app.put('/api/goals', authenticateToken, async (req, res) => {
   try {
     const { calories, protein, carbs, fat } = req.body;
+    if (supabase.isConfigured()) {
+      const goals = await supabase.upsertGoals(req.user.id, {
+        calories: Number(calories) || 2000,
+        protein: Number(protein) || 150,
+        carbs: Number(carbs) || 250,
+        fat: Number(fat) || 65
+      });
+      return res.json(goals);
+    }
     const stmt = db.prepare('UPDATE goals SET calories = ?, protein = ?, carbs = ?, fat = ? WHERE user_id = ?');
     stmt.run(calories, protein, carbs, fat, req.user.id);
     res.json(req.body);
@@ -686,9 +988,13 @@ app.put('/api/goals', authenticateToken, (req, res) => {
   }
 });
 
-app.get('/api/water', authenticateToken, (req, res) => {
+app.get('/api/water', authenticateToken, async (req, res) => {
   try {
-    const date = req.query.date || new Date().toDateString();
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+    if (supabase.isConfigured()) {
+      const water = await supabase.getWater(req.user.id, date);
+      return res.json({ amount: water?.amount || 0 });
+    }
     const stmt = db.prepare('SELECT * FROM water WHERE user_id = ? AND date = ?');
     const water = stmt.get(req.user.id, date);
     res.json({ amount: water?.amount || 0 });
@@ -697,10 +1003,14 @@ app.get('/api/water', authenticateToken, (req, res) => {
   }
 });
 
-app.post('/api/water', authenticateToken, (req, res) => {
+app.post('/api/water', authenticateToken, async (req, res) => {
   try {
-    const date = req.body.date || new Date().toDateString();
-    const amount = req.body.amount;
+    const date = req.body.date || new Date().toISOString().split('T')[0];
+    const amount = Number(req.body.amount) || 0;
+    if (supabase.isConfigured()) {
+      const water = await supabase.upsertWater(req.user.id, date, amount);
+      return res.json({ amount: water?.amount || amount });
+    }
     const stmt = db.prepare('INSERT OR REPLACE INTO water (user_id, date, amount) VALUES (?, ?, ?)');
     stmt.run(req.user.id, date, amount);
     res.json({ amount });

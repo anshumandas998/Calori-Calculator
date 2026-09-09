@@ -3,138 +3,144 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from "recharts";
+import CaloryLandingPage from "./src/LandingPage.jsx";
+import AdminDashboard from "./src/AdminDashboard.jsx";
 
-// ─── Theme System ─────────────────────────────────────────────────
+// ─── Theme System (Warm Organic Calory Calculator Palette) ──────────
 const THEMES = {
   emerald: {
     id: "emerald",
-    name: "Cyber Emerald",
-    icon: "⚡",
-    primary: "#10b981",
-    primaryLight: "#34d399",
-    primaryDark: "#059669",
-    primaryGradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-    primaryGlow: "0 0 28px rgba(16, 185, 129, 0.4)",
-    accent: "#f59e0b",
-    accentLight: "#fbbf24",
-    accentGradient: "linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)",
-    purple: "#a855f7",
-    blue: "#38bdf8",
-    cyan: "#06b6d4",
-    rose: "#f43f5e",
-    yellow: "#eab308",
-    red: "#ef4444",
-    bg: "#070a12",
-    bgGradient: "radial-gradient(circle at 10% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%), radial-gradient(circle at 90% 85%, rgba(56, 189, 248, 0.08) 0%, transparent 45%), #070a12",
-    bgCard: "rgba(15, 23, 42, 0.72)",
-    bgCardSolid: "#0f172a",
-    bgCardHover: "rgba(24, 34, 56, 0.85)",
-    border: "rgba(255, 255, 255, 0.08)",
-    borderHover: "rgba(52, 211, 153, 0.35)",
-    borderActive: "rgba(52, 211, 153, 0.6)",
-    text: "#f8fafc",
-    textMuted: "#94a3b8",
-    textDim: "#64748b",
-    cardShadow: "0 12px 32px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05)",
-    pieColors: ["#10b981", "#38bdf8", "#f59e0b", "#a855f7", "#eab308"],
+    name: "Calory Green",
+    icon: "🍏",
+    primary: "#237a44",
+    primaryLight: "#2e7d32",
+    primaryDark: "#1b6136",
+    primaryGradient: "linear-gradient(135deg, #237a44 0%, #1e683a 100%)",
+    primaryGlow: "0 4px 18px rgba(35, 122, 68, 0.25)",
+    accent: "#e67e22",
+    accentLight: "#f39c12",
+    accentGradient: "linear-gradient(135deg, #e67e22 0%, #d35400 100%)",
+    purple: "#7c3aed",
+    blue: "#0284c7",
+    blueLight: "#0ea5e9",
+    cyan: "#0891b2",
+    rose: "#e11d48",
+    yellow: "#d97706",
+    red: "#dc2626",
+    bg: "#f6f1eb",
+    bgGradient: "linear-gradient(180deg, #f6f1eb 0%, #faf6f0 50%, #f4efea 100%)",
+    bgCard: "#ffffff",
+    bgCardSolid: "#ffffff",
+    bgCardHover: "#faf8f5",
+    border: "rgba(0, 0, 0, 0.07)",
+    borderHover: "rgba(35, 122, 68, 0.4)",
+    borderActive: "#237a44",
+    text: "#18181b",
+    textMuted: "#52525b",
+    textDim: "#71717a",
+    cardShadow: "0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)",
+    pieColors: ["#237a44", "#0284c7", "#e67e22", "#7c3aed", "#d97706"],
   },
   aurora: {
     id: "aurora",
-    name: "Midnight Indigo",
-    icon: "🌌",
-    primary: "#6366f1",
-    primaryLight: "#818cf8",
-    primaryDark: "#4f46e5",
-    primaryGradient: "linear-gradient(135deg, #6366f1 0%, #4338ca 100%)",
-    primaryGlow: "0 0 28px rgba(99, 102, 241, 0.4)",
-    accent: "#ec4899",
-    accentLight: "#f472b6",
-    accentGradient: "linear-gradient(135deg, #ec4899 0%, #db2777 100%)",
-    purple: "#c084fc",
-    blue: "#38bdf8",
-    cyan: "#22d3ee",
-    rose: "#f43f5e",
-    yellow: "#fbbf24",
-    red: "#ef4444",
-    bg: "#050714",
-    bgGradient: "radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 45%), radial-gradient(circle at 85% 85%, rgba(236, 72, 153, 0.1) 0%, transparent 45%), #050714",
-    bgCard: "rgba(18, 20, 48, 0.72)",
-    bgCardSolid: "#131638",
-    bgCardHover: "rgba(28, 32, 72, 0.85)",
-    border: "rgba(255, 255, 255, 0.09)",
-    borderHover: "rgba(129, 140, 248, 0.4)",
-    borderActive: "rgba(129, 140, 248, 0.6)",
-    text: "#f8fafc",
-    textMuted: "#a5b4fc",
-    textDim: "#6366f1",
-    cardShadow: "0 12px 32px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
-    pieColors: ["#6366f1", "#ec4899", "#38bdf8", "#a855f7", "#fbbf24"],
+    name: "Herbal Sage",
+    icon: "🌿",
+    primary: "#3b7a57",
+    primaryLight: "#4a936c",
+    primaryDark: "#2c5f42",
+    primaryGradient: "linear-gradient(135deg, #3b7a57 0%, #2c5f42 100%)",
+    primaryGlow: "0 4px 18px rgba(59, 122, 87, 0.25)",
+    accent: "#d97706",
+    accentLight: "#f59e0b",
+    accentGradient: "linear-gradient(135deg, #d97706 0%, #b45309 100%)",
+    purple: "#8b5cf6",
+    blue: "#0284c7",
+    blueLight: "#38bdf8",
+    cyan: "#06b6d4",
+    rose: "#e11d48",
+    yellow: "#ca8a04",
+    red: "#dc2626",
+    bg: "#f4f6f0",
+    bgGradient: "linear-gradient(180deg, #f4f6f0 0%, #f7f9f4 50%, #eef2e9 100%)",
+    bgCard: "#ffffff",
+    bgCardSolid: "#ffffff",
+    bgCardHover: "#f8faf6",
+    border: "rgba(0, 0, 0, 0.07)",
+    borderHover: "rgba(59, 122, 87, 0.4)",
+    borderActive: "#3b7a57",
+    text: "#18181b",
+    textMuted: "#52525b",
+    textDim: "#71717a",
+    cardShadow: "0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)",
+    pieColors: ["#3b7a57", "#0284c7", "#d97706", "#8b5cf6", "#ca8a04"],
   },
   crimson: {
     id: "crimson",
-    name: "Sunset Lava",
-    icon: "🔥",
-    primary: "#f43f5e",
-    primaryLight: "#fb7185",
-    primaryDark: "#e11d48",
-    primaryGradient: "linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)",
-    primaryGlow: "0 0 28px rgba(244, 63, 94, 0.4)",
-    accent: "#f59e0b",
-    accentLight: "#fbbf24",
-    accentGradient: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-    purple: "#e879f9",
-    blue: "#38bdf8",
-    cyan: "#2dd4bf",
-    rose: "#f43f5e",
+    name: "Warm Sand",
+    icon: "🌾",
+    primary: "#b45309",
+    primaryLight: "#d97706",
+    primaryDark: "#92400e",
+    primaryGradient: "linear-gradient(135deg, #b45309 0%, #92400e 100%)",
+    primaryGlow: "0 4px 18px rgba(180, 83, 9, 0.25)",
+    accent: "#237a44",
+    accentLight: "#2e7d32",
+    accentGradient: "linear-gradient(135deg, #237a44 0%, #1e683a 100%)",
+    purple: "#7c3aed",
+    blue: "#0284c7",
+    blueLight: "#38bdf8",
+    cyan: "#0891b2",
+    rose: "#e11d48",
     yellow: "#eab308",
     red: "#ef4444",
-    bg: "#0c070e",
-    bgGradient: "radial-gradient(circle at 10% 20%, rgba(244, 63, 94, 0.14) 0%, transparent 45%), radial-gradient(circle at 90% 80%, rgba(245, 158, 11, 0.1) 0%, transparent 45%), #0c070e",
-    bgCard: "rgba(30, 16, 26, 0.72)",
-    bgCardSolid: "#1f101c",
-    bgCardHover: "rgba(45, 24, 40, 0.85)",
-    border: "rgba(255, 255, 255, 0.08)",
-    borderHover: "rgba(251, 113, 133, 0.4)",
-    borderActive: "rgba(251, 113, 133, 0.6)",
-    text: "#fdf2f4",
-    textMuted: "#fbcfe8",
-    textDim: "#9f1239",
-    cardShadow: "0 12px 32px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06)",
-    pieColors: ["#f43f5e", "#f59e0b", "#38bdf8", "#c084fc", "#34d399"],
+    bg: "#f8f4ed",
+    bgGradient: "linear-gradient(180deg, #f8f4ed 0%, #fbf8f2 50%, #f3ece2 100%)",
+    bgCard: "#ffffff",
+    bgCardSolid: "#ffffff",
+    bgCardHover: "#fdfbf8",
+    border: "rgba(0, 0, 0, 0.07)",
+    borderHover: "rgba(180, 83, 9, 0.4)",
+    borderActive: "#b45309",
+    text: "#18181b",
+    textMuted: "#52525b",
+    textDim: "#71717a",
+    cardShadow: "0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)",
+    pieColors: ["#b45309", "#237a44", "#0284c7", "#7c3aed", "#eab308"],
   },
   slate: {
     id: "slate",
-    name: "Stealth Titanium",
-    icon: "💎",
-    primary: "#38bdf8",
-    primaryLight: "#7dd3fc",
-    primaryDark: "#0284c7",
-    primaryGradient: "linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)",
-    primaryGlow: "0 0 28px rgba(56, 189, 248, 0.4)",
-    accent: "#10b981",
-    accentLight: "#34d399",
-    accentGradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-    purple: "#c084fc",
-    blue: "#60a5fa",
-    cyan: "#22d3ee",
-    rose: "#f43f5e",
-    yellow: "#fbbf24",
-    red: "#ef4444",
-    bg: "#080c14",
-    bgGradient: "radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.12) 0%, transparent 45%), radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 45%), #080c14",
-    bgCard: "rgba(15, 23, 42, 0.75)",
-    bgCardSolid: "#0f172a",
-    bgCardHover: "rgba(30, 41, 59, 0.85)",
-    border: "rgba(255, 255, 255, 0.09)",
-    borderHover: "rgba(125, 211, 252, 0.4)",
-    borderActive: "rgba(125, 211, 252, 0.6)",
-    text: "#f8fafc",
-    textMuted: "#94a3b8",
-    textDim: "#475569",
-    cardShadow: "0 12px 32px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
-    pieColors: ["#38bdf8", "#10b981", "#fbbf24", "#a855f7", "#f43f5e"],
+    name: "Nordic Clean",
+    icon: "❄️",
+    primary: "#1d4ed8",
+    primaryLight: "#2563eb",
+    primaryDark: "#1e40af",
+    primaryGradient: "linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)",
+    primaryGlow: "0 4px 18px rgba(29, 78, 216, 0.25)",
+    accent: "#237a44",
+    accentLight: "#2e7d32",
+    accentGradient: "linear-gradient(135deg, #237a44 0%, #1e683a 100%)",
+    purple: "#7c3aed",
+    blue: "#0284c7",
+    blueLight: "#38bdf8",
+    cyan: "#0891b2",
+    rose: "#e11d48",
+    yellow: "#d97706",
+    red: "#dc2626",
+    bg: "#f0f4f8",
+    bgGradient: "linear-gradient(180deg, #f0f4f8 0%, #f6f9fc 50%, #e8eef4 100%)",
+    bgCard: "#ffffff",
+    bgCardSolid: "#ffffff",
+    bgCardHover: "#f8fafc",
+    border: "rgba(0, 0, 0, 0.07)",
+    borderHover: "rgba(29, 78, 216, 0.4)",
+    borderActive: "#1d4ed8",
+    text: "#18181b",
+    textMuted: "#52525b",
+    textDim: "#71717a",
+    cardShadow: "0 4px 20px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)",
+    pieColors: ["#1d4ed8", "#237a44", "#e67e22", "#7c3aed", "#d97706"],
   }
-};
+};;
 
 const RAW_API_BASE = (typeof import.meta !== "undefined" && import.meta.env && (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL)) || "";
 const API_BASE = String(RAW_API_BASE).replace(/\/+$/, "");
@@ -389,8 +395,6 @@ const getStyles = (COLORS, isMobile) => ({
     width: 250,
     minHeight: "100vh",
     background: COLORS.bgCardSolid,
-    backdropFilter: "blur(24px)",
-    WebkitBackdropFilter: "blur(24px)",
     borderRight: `1px solid ${COLORS.border}`,
     display: "flex",
     flexDirection: "column",
@@ -399,7 +403,7 @@ const getStyles = (COLORS, isMobile) => ({
     top: 0,
     left: 0,
     zIndex: 100,
-    boxShadow: "4px 0 24px rgba(0,0,0,0.4)",
+    boxShadow: "2px 0 20px rgba(0,0,0,0.03)",
   },
   main: {
     marginLeft: isMobile ? 0 : 250,
@@ -412,8 +416,6 @@ const getStyles = (COLORS, isMobile) => ({
   },
   card: {
     background: COLORS.bgCard,
-    backdropFilter: "blur(16px)",
-    WebkitBackdropFilter: "blur(16px)",
     border: `1px solid ${COLORS.border}`,
     borderRadius: 20,
     padding: "24px",
@@ -424,7 +426,7 @@ const getStyles = (COLORS, isMobile) => ({
     background: COLORS.primaryGradient,
     color: "#fff",
     border: "none",
-    borderRadius: 12,
+    borderRadius: 9999,
     padding: "12px 24px",
     cursor: "pointer",
     fontWeight: 600,
@@ -437,58 +439,58 @@ const getStyles = (COLORS, isMobile) => ({
     transition: "all 0.2s ease",
   },
   btnOutline: {
-    background: "rgba(255, 255, 255, 0.04)",
+    background: "#ffffff",
     color: COLORS.text,
     border: `1px solid ${COLORS.border}`,
-    borderRadius: 12,
+    borderRadius: 9999,
     padding: "11px 20px",
     cursor: "pointer",
-    fontWeight: 500,
+    fontWeight: 600,
     fontSize: 14,
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
     transition: "all 0.2s ease",
   },
   input: {
-    background: "rgba(5, 8, 16, 0.6)",
-    border: `1px solid ${COLORS.border}`,
+    background: "#ffffff",
+    border: "1px solid #d4d4d8",
     borderRadius: 12,
     color: COLORS.text,
     padding: "12px 16px",
     fontSize: 14,
     width: "100%",
     outline: "none",
+    boxShadow: "inset 0 1px 2px rgba(0,0,0,0.02)",
     transition: "all 0.2s ease",
   },
   label: {
-    fontSize: 11,
+    fontSize: 12,
     color: COLORS.textMuted,
     marginBottom: 8,
     display: "block",
-    fontWeight: 600,
-    letterSpacing: "0.06em",
+    fontWeight: 700,
+    letterSpacing: "0.04em",
     textTransform: "uppercase",
   },
   metricCard: {
     background: COLORS.bgCard,
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
     border: `1px solid ${COLORS.border}`,
-    borderRadius: 16,
+    borderRadius: 18,
     padding: "18px 20px",
     boxShadow: COLORS.cardShadow,
-    transition: "transform 0.2s ease, border-color 0.2s ease",
+    transition: "transform 0.2s ease, box-shadow 0.2s ease",
   },
   tag: {
-    background: `rgba(255, 255, 255, 0.05)`,
-    color: COLORS.primaryLight,
-    border: `1px solid ${COLORS.border}`,
+    background: "rgba(35, 122, 68, 0.08)",
+    color: COLORS.primary,
+    border: "1px solid rgba(35, 122, 68, 0.15)",
     borderRadius: 20,
     padding: "4px 12px",
     fontSize: 12,
-    fontWeight: 600,
+    fontWeight: 700,
     display: "inline-flex",
     alignItems: "center",
     gap: 4,
@@ -501,12 +503,12 @@ const getStyles = (COLORS, isMobile) => ({
     cursor: "pointer",
     borderRadius: "0 12px 12px 0",
     marginRight: 12,
-    background: active ? `linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)` : "transparent",
-    color: active ? COLORS.primaryLight : COLORS.textMuted,
-    fontWeight: active ? 700 : 500,
+    background: active ? "rgba(35, 122, 68, 0.08)" : "transparent",
+    color: active ? COLORS.primary : COLORS.textMuted,
+    fontWeight: active ? 700 : 600,
     fontSize: 14,
     transition: "all 0.2s ease",
-    borderLeft: active ? `3px solid ${COLORS.primaryLight}` : "3px solid transparent",
+    borderLeft: active ? `3px solid ${COLORS.primary}` : "3px solid transparent",
   }),
 });
 
@@ -602,29 +604,21 @@ function VibeLogoIcon({ size = 42, COLORS }) {
 function Logo({ COLORS }) {
   return (
     <div style={{ padding: "0 20px 20px", borderBottom: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12 }}>
-      <VibeLogoIcon size={44} COLORS={COLORS} />
+      <img
+        src="/apple-gauge-logo.svg"
+        alt="Calory Calculator"
+        style={{ width: 38, height: 38, objectFit: "contain", display: "block" }}
+        onError={(e) => {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = "/apple-gauge-logo.png";
+        }}
+      />
       <div>
-        <div style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Outfit', sans-serif", letterSpacing: "-0.03em", color: "#fff", display: "flex", alignItems: "center", gap: 5 }}>
-          <span>NUTR<span style={{ color: COLORS.primaryLight }}>I</span></span>
-          <span style={{
-            background: `linear-gradient(135deg, ${COLORS.primaryLight}, ${COLORS.blueLight})`,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            fontWeight: 900,
-          }}>
-            AI
-          </span>
-          <span style={{
-            display: "inline-block",
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-            background: COLORS.primaryLight,
-            boxShadow: `0 0 10px ${COLORS.primaryLight}`,
-          }} />
+        <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "'Outfit', sans-serif", letterSpacing: "-0.02em", color: COLORS.text }}>
+          Calory Calculator
         </div>
-        <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2, fontWeight: 500 }}>
-          AI Nutrition Engine
+        <div style={{ fontSize: 11, color: COLORS.primary, marginTop: 2, fontWeight: 700 }}>
+          Fuel Better. Live Better.
         </div>
       </div>
     </div>
@@ -648,7 +642,7 @@ function ThemeSwitcher({ currentTheme, onSelectTheme, COLORS }) {
               onClick={() => onSelectTheme(key)}
               title={t.name}
               style={{
-                background: active ? t.primaryGradient : "rgba(255,255,255,0.04)",
+                background: active ? t.primaryGradient : "rgba(0,0,0,0.04)",
                 border: `1px solid ${active ? t.primaryLight : COLORS.border}`,
                 borderRadius: 8,
                 padding: "6px 0",
@@ -681,7 +675,7 @@ function NutrientBar({ label, value, max, color, COLORS }) {
           {Math.round(value)}g <span style={{ color: COLORS.textDim, fontWeight: 400, fontSize: 12 }}>/ {max}g</span>
         </span>
       </div>
-      <div style={{ height: 8, background: "rgba(255,255,255,0.06)", borderRadius: 8, overflow: "hidden", position: "relative" }}>
+      <div style={{ height: 8, background: "rgba(0, 0, 0, 0.06)", borderRadius: 8, overflow: "hidden", position: "relative" }}>
         <div style={{
           height: "100%",
           width: `${pct}%`,
@@ -730,7 +724,7 @@ function StatCard({ label, value, unit, icon, color, sub, S, COLORS }) {
           </span>
         )}
       </div>
-      <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: "#fff", letterSpacing: "-0.02em" }}>
+      <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: COLORS.text, letterSpacing: "-0.02em" }}>
         {value} <span style={{ fontSize: 13, fontWeight: 500, color: COLORS.textMuted }}>{unit}</span>
       </div>
       <div style={{ fontSize: 12, fontWeight: 500, color: COLORS.textMuted, marginTop: 4 }}>{label}</div>
@@ -772,7 +766,7 @@ function MobileTopBar({ user, onLogout, currentTheme, onSelectTheme, COLORS }) {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <VibeLogoIcon size={34} COLORS={COLORS} />
-        <div style={{ fontSize: 18, fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: "#fff", display: "flex", alignItems: "center", gap: 4 }}>
+        <div style={{ fontSize: 18, fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: COLORS.text, display: "flex", alignItems: "center", gap: 4 }}>
           <span>NUTR<span style={{ color: COLORS.primaryLight }}>I</span></span>
           <span style={{
             background: `linear-gradient(135deg, ${COLORS.primaryLight}, ${COLORS.blueLight})`,
@@ -871,6 +865,7 @@ function MobileBottomNav({ page, setPage, COLORS }) {
     ["calculator", "📊", "Calculator"],
     ["planner", "📅", "Planner"],
     ["recommendations", "💡", "AI Recs"],
+    ["admin", "🛡️", "Admin"],
   ];
   return (
     <div style={{
@@ -980,11 +975,53 @@ function AuthModal({ onLogin, onClose, initialMode = "login", COLORS, S, isMobil
     }
   };
 
+  const [googleChooserOpen, setGoogleChooserOpen] = useState(false);
+  const [showCustomGoogle, setShowCustomGoogle] = useState(false);
+  const [customName, setCustomName] = useState("");
+  const [customEmail, setCustomEmail] = useState("");
+
+  const executeGoogleLogin = async (googleName, googleEmail) => {
+    setErr("");
+    setLoading(true);
+    try {
+      const safeName = (googleName || "Google User").trim();
+      const safeEmail = (googleEmail || "google.user@gmail.com").trim().toLowerCase();
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: safeEmail,
+          name: safeName,
+          avatar: safeName.charAt(0).toUpperCase() || "G"
+        })
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Google authentication failed");
+      setStoredToken(result.token);
+      setStoredUser(result.user);
+      setGoogleChooserOpen(false);
+      onLogin(result.user);
+    } catch (error) {
+      setErr(error.message || "Google login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    setErr("");
+    if (form.email && form.email.includes("@")) {
+      executeGoogleLogin(form.name || form.email.split("@")[0], form.email);
+    } else {
+      setGoogleChooserOpen(true);
+    }
+  };
+
   return (
     <div style={{
       position: "fixed",
       inset: 0,
-      background: "rgba(3, 7, 18, 0.85)",
+      background: "rgba(24, 24, 27, 0.45)",
       backdropFilter: "blur(12px)",
       zIndex: 1000,
       display: "flex",
@@ -1001,577 +1038,373 @@ function AuthModal({ onLogin, onClose, initialMode = "login", COLORS, S, isMobil
         position: "relative",
       }}>
         {/* Back / Close button */}
-        {onClose && (
-          <button
-            onClick={onClose}
-            style={{
-              position: "absolute",
-              top: 16,
-              right: 16,
-              background: "rgba(255,255,255,0.06)",
-              border: `1px solid ${COLORS.border}`,
-              borderRadius: "50%",
-              width: 32,
-              height: 32,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: COLORS.textMuted,
-              cursor: "pointer",
-              fontSize: 14,
-            }}
-            title="Back to Landing Page"
-          >
-            ✕
-          </button>
-        )}
+        <button
+          onClick={googleChooserOpen ? () => { setGoogleChooserOpen(false); setShowCustomGoogle(false); setErr(""); } : onClose}
+          style={{
+            position: "absolute",
+            top: 16,
+            right: 16,
+            background: "rgba(0,0,0,0.04)",
+            border: `1px solid ${COLORS.border}`,
+            borderRadius: "50%",
+            width: 32,
+            height: 32,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: COLORS.textMuted,
+            cursor: "pointer",
+            fontSize: 14,
+          }}
+          title={googleChooserOpen ? "Back to sign in" : "Back to Landing Page"}
+        >
+          ✕
+        </button>
 
-        <div style={{ textAlign: "center", marginBottom: 22 }}>
-          <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: 12 }}>
-            <VibeLogoIcon size={56} COLORS={COLORS} />
-          </div>
-          <div style={{ fontSize: 24, fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: "#fff", letterSpacing: "-0.03em", display: "flex", justifyContent: "center", alignItems: "center", gap: 4 }}>
-            <span>NUTR<span style={{ color: COLORS.primaryLight }}>I</span></span>
-            <span style={{
-              background: `linear-gradient(135deg, ${COLORS.primaryLight}, ${COLORS.blueLight})`,
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}>AI</span>
-          </div>
-          <div style={{ color: COLORS.textMuted, fontSize: 13, marginTop: 4 }}>
-            {mode === "login" ? "Sign in to access your nutrition dashboard" : "Create an account to start tracking nutrition"}
-          </div>
-        </div>
+        {googleChooserOpen ? (
+          <div>
+            {/* Google Account Chooser View */}
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: 12 }}>
+                <svg width="36" height="36" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                  <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                  <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.99 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+                  <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                </svg>
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, letterSpacing: "-0.01em" }}>
+                Sign in with Google
+              </div>
+              <div style={{ color: COLORS.textMuted, fontSize: 13, marginTop: 4 }}>
+                Choose an account to continue to <strong style={{ color: COLORS.text }}>Calory Calculator</strong>
+              </div>
+            </div>
 
-        {/* Tab Switcher */}
-        <div style={{ display: "flex", background: "rgba(5,8,16,0.6)", borderRadius: 14, padding: 4, marginBottom: 20, border: `1px solid ${COLORS.border}` }}>
-          {["login", "register"].map(m => (
-            <button key={m} type="button" onClick={() => { setMode(m); setErr(""); }} style={{
-              flex: 1, padding: "10px 0", border: "none", cursor: "pointer", borderRadius: 10,
-              background: mode === m ? COLORS.primaryGradient : "transparent",
-              color: mode === m ? "#fff" : COLORS.textMuted,
-              fontWeight: mode === m ? 600 : 500, fontSize: 14,
-              boxShadow: mode === m ? COLORS.primaryGlow : "none",
-              transition: "all 0.2s ease",
-            }}>
-              {m === "login" ? "Sign In" : "Sign Up"}
+            {err && (
+              <div style={{ color: COLORS.red, fontSize: 13, marginBottom: 14, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", padding: "10px 14px", borderRadius: 10 }}>
+                {err}
+              </div>
+            )}
+
+            {/* Google Accounts List */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
+              {[
+                { name: "Anshuman Das", email: "anshumand108@gmail.com", avatarBg: "#1a73e8", initial: "A" },
+                { name: "Alex Morgan", email: "alex.morgan@gmail.com", avatarBg: "#237a44", initial: "A" },
+              ].map((acc) => (
+                <button
+                  key={acc.email}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => executeGoogleLogin(acc.name, acc.email)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    width: "100%",
+                    padding: "12px 14px",
+                    background: "#ffffff",
+                    border: "1px solid #e4e4e7",
+                    borderRadius: 14,
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.15s ease",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "#237a44";
+                    e.currentTarget.style.background = "#fafaf9";
+                    e.currentTarget.style.boxShadow = "0 4px 12px rgba(35,122,68,0.08)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "#e4e4e7";
+                    e.currentTarget.style.background = "#ffffff";
+                    e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.03)";
+                  }}
+                >
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    background: acc.avatarBg,
+                    color: "#ffffff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 17,
+                    fontWeight: 700,
+                    flexShrink: 0,
+                  }}>
+                    {acc.initial}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.text }}>{acc.name}</div>
+                    <div style={{ fontSize: 12, color: COLORS.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {acc.email}
+                    </div>
+                  </div>
+                  <div style={{ color: "#237a44", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                    {loading ? "Signing in..." : "Continue →"}
+                  </div>
+                </button>
+              ))}
+
+              {/* Use Another Account Option */}
+              {!showCustomGoogle ? (
+                <button
+                  type="button"
+                  onClick={() => setShowCustomGoogle(true)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    width: "100%",
+                    padding: "12px 14px",
+                    background: "transparent",
+                    border: "1px dashed #d4d4d8",
+                    borderRadius: 14,
+                    cursor: "pointer",
+                    textAlign: "left",
+                    color: COLORS.text,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#237a44"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#d4d4d8"; }}
+                >
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    background: "#f4efe9",
+                    color: COLORS.textMuted,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                    flexShrink: 0,
+                  }}>
+                    👤+
+                  </div>
+                  <span>Use another Google account</span>
+                </button>
+              ) : (
+                <div style={{ background: "#faf8f5", border: "1px solid #e4e4e7", borderRadius: 14, padding: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: COLORS.text }}>
+                    Enter Google Account Details
+                  </div>
+                  <input
+                    style={{ ...S.input, marginBottom: 8, fontSize: 13 }}
+                    placeholder="Full Name (e.g. John Doe)"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                  />
+                  <input
+                    style={{ ...S.input, marginBottom: 10, fontSize: 13 }}
+                    type="email"
+                    placeholder="you@gmail.com"
+                    value={customEmail}
+                    onChange={(e) => setCustomEmail(e.target.value)}
+                  />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      type="button"
+                      disabled={loading || !customEmail.includes("@")}
+                      onClick={() => executeGoogleLogin(customName || customEmail.split("@")[0], customEmail)}
+                      style={{ ...S.btn, flex: 1, padding: "8px 0", fontSize: 13 }}
+                    >
+                      {loading ? "Connecting..." : "Continue"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomGoogle(false)}
+                      style={{ background: "#ffffff", border: "1px solid #e4e4e7", borderRadius: 10, padding: "8px 14px", fontSize: 13, cursor: "pointer" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 10, borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+              <button
+                type="button"
+                onClick={() => { setGoogleChooserOpen(false); setShowCustomGoogle(false); setErr(""); }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: COLORS.primaryLight,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  padding: 0,
+                }}
+              >
+                ← Back to email sign in
+              </button>
+              <span style={{ fontSize: 11, color: COLORS.textMuted }}>Google Secure Auth</span>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div style={{ textAlign: "center", marginBottom: 20 }}>
+              <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: 10 }}>
+                <img src="/apple-gauge-logo.svg" alt="Calory Calculator" style={{ width: 44, height: 44 }} />
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: COLORS.text, letterSpacing: "-0.02em" }}>
+                Calory Calculator
+              </div>
+              <div style={{ color: COLORS.textMuted, fontSize: 13, marginTop: 4 }}>
+                {mode === "login" ? "Sign in to access your nutrition dashboard" : "Create an account to start tracking nutrition"}
+              </div>
+            </div>
+
+            {/* Tab Switcher */}
+            <div style={{ display: "flex", background: "#f4efe9", borderRadius: 14, padding: 4, marginBottom: 18, border: `1px solid ${COLORS.border}` }}>
+              {["login", "register"].map(m => (
+                <button key={m} type="button" onClick={() => { setMode(m); setErr(""); }} style={{
+                  flex: 1, padding: "10px 0", border: "none", cursor: "pointer", borderRadius: 10,
+                  background: mode === m ? COLORS.primaryGradient : "transparent",
+                  color: mode === m ? "#fff" : COLORS.textMuted,
+                  fontWeight: mode === m ? 700 : 500, fontSize: 14,
+                  boxShadow: mode === m ? COLORS.primaryGlow : "none",
+                  transition: "all 0.2s ease",
+                }}>
+                  {m === "login" ? "Sign In" : "Sign Up"}
+                </button>
+              ))}
+            </div>
+
+            {/* Continue with Google Option */}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              style={{
+                width: "100%",
+                background: "#ffffff",
+                border: "1px solid #e4e4e7",
+                borderRadius: 12,
+                padding: "12px 16px",
+                fontSize: 14,
+                fontWeight: 700,
+                color: "#18181b",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                marginBottom: 16,
+                transition: "all 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.08)";
+                e.currentTarget.style.borderColor = "#237a44";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
+                e.currentTarget.style.borderColor = "#e4e4e7";
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.24v3.15C3.26 21.36 7.33 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.24C.45 8.15 0 9.99 0 12s.45 3.85 1.24 5.42l4.04-3.15z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.24 6.58l4.04 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+              </svg>
+              <span>{loading ? "Signing in..." : "Continue with Google"}</span>
             </button>
-          ))}
-        </div>
 
-        <form onSubmit={submit}>
-          {mode === "register" && (
-            <div style={{ marginBottom: 14 }}>
-              <label style={S.label}>Full Name</label>
-              <input style={S.input} placeholder="Alex Morgan" value={form.name} onChange={f("name")} required />
+            {/* Divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+              <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.08)" }} />
+              <span style={{ fontSize: 12, color: COLORS.textMuted, fontWeight: 500 }}>or continue with email</span>
+              <div style={{ flex: 1, height: 1, background: "rgba(0,0,0,0.08)" }} />
             </div>
-          )}
-          <div style={{ marginBottom: 14 }}>
-            <label style={S.label}>Email Address</label>
-            <input style={S.input} placeholder="you@email.com" value={form.email} onChange={f("email")} type="email" required />
+
+            <form onSubmit={submit}>
+              {mode === "register" && (
+                <div style={{ marginBottom: 14 }}>
+                  <label style={S.label}>Full Name</label>
+                  <input style={S.input} placeholder="Alex Morgan" value={form.name} onChange={f("name")} required />
+                </div>
+              )}
+              <div style={{ marginBottom: 14 }}>
+                <label style={S.label}>Email Address</label>
+                <input style={S.input} placeholder="you@email.com" value={form.email} onChange={f("email")} type="email" required />
+              </div>
+              <div style={{ marginBottom: mode === "register" ? 14 : 18 }}>
+                <label style={S.label}>Password</label>
+                <input style={S.input} placeholder="••••••••" value={form.password} onChange={f("password")} type="password" required />
+              </div>
+
+              {mode === "register" && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
+                  <div>
+                    <label style={S.label}>Age</label>
+                    <input style={S.input} placeholder="25" value={form.age} onChange={f("age")} type="number" />
+                  </div>
+                  <div>
+                    <label style={S.label}>Weight (kg)</label>
+                    <input style={S.input} placeholder="70" value={form.weight} onChange={f("weight")} type="number" />
+                  </div>
+                  <div>
+                    <label style={S.label}>Height (cm)</label>
+                    <input style={S.input} placeholder="175" value={form.height} onChange={f("height")} type="number" />
+                  </div>
+                </div>
+              )}
+
+              {mode === "register" && (
+                <div style={{ marginBottom: 18 }}>
+                  <label style={S.label}>Primary Fitness Goal</label>
+                  <select style={{ ...S.input }} value={form.goal} onChange={f("goal")}>
+                    <option value="lose">Lose Weight & Lean Out</option>
+                    <option value="maintain">Maintain Current Weight</option>
+                    <option value="gain">Gain Muscle & Bulk</option>
+                  </select>
+                </div>
+              )}
+
+              {err && (
+                <div style={{ color: COLORS.red, fontSize: 13, marginBottom: 14, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", padding: "10px 14px", borderRadius: 10 }}>
+                  {err}
+                </div>
+              )}
+
+              <button type="submit" style={{ ...S.btn, width: "100%", padding: "14px 0", fontSize: 15 }} disabled={loading}>
+                {loading ? "Please wait..." : mode === "login" ? "Sign In to NutriAI" : "Create My Account"}
+              </button>
+            </form>
+
+            <div style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: COLORS.textMuted }}>
+              {mode === "login" ? (
+                <>
+                  Don't have an account?{" "}
+                  <span style={{ color: COLORS.primaryLight, cursor: "pointer", fontWeight: 600 }} onClick={() => { setMode("register"); setErr(""); }}>Sign up free</span>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <span style={{ color: COLORS.primaryLight, cursor: "pointer", fontWeight: 600 }} onClick={() => { setMode("login"); setErr(""); }}>Sign in</span>
+                </>
+              )}
+            </div>
           </div>
-          <div style={{ marginBottom: mode === "register" ? 14 : 18 }}>
-            <label style={S.label}>Password</label>
-            <input style={S.input} placeholder="••••••••" value={form.password} onChange={f("password")} type="password" required />
-          </div>
-
-          {mode === "register" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
-              <div>
-                <label style={S.label}>Age</label>
-                <input style={S.input} placeholder="25" value={form.age} onChange={f("age")} type="number" />
-              </div>
-              <div>
-                <label style={S.label}>Weight (kg)</label>
-                <input style={S.input} placeholder="70" value={form.weight} onChange={f("weight")} type="number" />
-              </div>
-              <div>
-                <label style={S.label}>Height (cm)</label>
-                <input style={S.input} placeholder="175" value={form.height} onChange={f("height")} type="number" />
-              </div>
-            </div>
-          )}
-
-          {mode === "register" && (
-            <div style={{ marginBottom: 18 }}>
-              <label style={S.label}>Primary Fitness Goal</label>
-              <select style={{ ...S.input }} value={form.goal} onChange={f("goal")}>
-                <option value="lose">Lose Weight & Lean Out</option>
-                <option value="maintain">Maintain Current Weight</option>
-                <option value="gain">Gain Muscle & Bulk</option>
-              </select>
-            </div>
-          )}
-
-          {err && (
-            <div style={{ color: COLORS.red, fontSize: 13, marginBottom: 14, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)", padding: "10px 14px", borderRadius: 10 }}>
-              {err}
-            </div>
-          )}
-
-          <button type="submit" style={{ ...S.btn, width: "100%", padding: "14px 0", fontSize: 15 }} disabled={loading}>
-            {loading ? "Please wait..." : mode === "login" ? "Sign In to NutriAI" : "Create My Account"}
-          </button>
-        </form>
-
-        <div style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: COLORS.textMuted }}>
-          {mode === "login" ? (
-            <>
-              Don't have an account?{" "}
-              <span style={{ color: COLORS.primaryLight, cursor: "pointer", fontWeight: 600 }} onClick={() => { setMode("register"); setErr(""); }}>Sign up free</span>
-            </>
-          ) : (
-            <>
-              Already have an account?{" "}
-              <span style={{ color: COLORS.primaryLight, cursor: "pointer", fontWeight: 600 }} onClick={() => { setMode("login"); setErr(""); }}>Sign in</span>
-            </>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
 }
 
 // ─── LANDING PAGE COMPONENT ───────────────────────────────────────
-function LandingPage({ onOpenAuth, onDemoLogin, themeKey, onSelectTheme, COLORS, S, isMobile }) {
-  const heroFoods = [
-    { name: "Avocado & Poached Egg Toast", cals: "340 kcal", p: "18g", c: "28g", f: "18g", img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=300&q=80" },
-    { name: "Pan-Seared Salmon & Quinoa", cals: "480 kcal", p: "42g", c: "32g", f: "20g", img: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=300&q=80" },
-    { name: "Greek Yogurt & Fresh Berries", cals: "210 kcal", p: "22g", c: "24g", f: "3g", img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=300&q=80" },
-  ];
+// Calory Calculator landing page matching the custom reference design
+const LandingPage = CaloryLandingPage;
 
-  const features = [
-    {
-      icon: "📸",
-      title: "Live Camera Food Scanner",
-      desc: "Snap food photos with your smartphone camera. AI recognizes dish ingredients and instantly calculates calories & macros with real culinary photography.",
-      badge: "Vision AI",
-      color: COLORS.primaryLight
-    },
-    {
-      icon: "🥗",
-      title: "Veg & Non-Veg Meal Planner",
-      desc: "Generate personalized vegetarian, non-vegetarian, high-protein, keto, vegan, or eggetarian diet schedules tailored to your exact caloric targets.",
-      badge: "Smart Diet",
-      color: COLORS.blue
-    },
-    {
-      icon: "📅",
-      title: "Date-wise Database Storage",
-      desc: "All meals and daily hydration logs are saved date-by-date in a SQLite database with past-only calendar navigation and 30-day analytics.",
-      badge: "SQLite DB",
-      color: COLORS.accent
-    },
-    {
-      icon: "⚡",
-      title: "1-Click Real Food Presets",
-      desc: "Log whole food staples (Apples, Grilled Chicken, Oatmeal Bowls, Boiled Eggs) with a single tap to the database for today or any past date.",
-      badge: "Instant Log",
-      color: COLORS.yellow
-    },
-    {
-      icon: "🎨",
-      title: "4 Ultra-Modern Themes",
-      desc: "Switch between Cyber Emerald, Midnight Indigo, Sunset Lava, and Stealth Titanium themes with modern glassmorphism styling.",
-      badge: "Custom UI",
-      color: COLORS.purple
-    },
-    {
-      icon: "🛡️",
-      title: "Smart Non-Food Validator",
-      desc: "Built-in edible food detector rejects non-food items (cars, laptops, tables, gibberish) and guides users to enter valid ingredients.",
-      badge: "Food Guard",
-      color: COLORS.rose
-    }
-  ];
-
-  return (
-    <div style={{ minHeight: "100vh", background: COLORS.bgGradient, color: COLORS.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      {/* ─── Navigation Header ─── */}
-      <header style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        background: "rgba(5, 8, 16, 0.8)",
-        backdropFilter: "blur(16px)",
-        borderBottom: `1px solid ${COLORS.border}`,
-        padding: isMobile ? "12px 16px" : "16px 36px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <VibeLogoIcon size={38} COLORS={COLORS} />
-          <div>
-            <span style={{ fontSize: 20, fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: "#fff", letterSpacing: "-0.03em" }}>
-              NUTR<span style={{ color: COLORS.primaryLight }}>I</span>
-              <span style={{
-                background: `linear-gradient(135deg, ${COLORS.primaryLight}, ${COLORS.blueLight})`,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}>AI</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Center Nav Links (Desktop) */}
-        {!isMobile && (
-          <div style={{ display: "flex", alignItems: "center", gap: 24, fontSize: 14, fontWeight: 500, color: COLORS.textMuted }}>
-            <a href="#features" style={{ color: COLORS.textMuted, textDecoration: "none", transition: "color 0.2s" }}>Features</a>
-            <a href="#camera" style={{ color: COLORS.textMuted, textDecoration: "none", transition: "color 0.2s" }}>AI Scanner</a>
-            <a href="#planner" style={{ color: COLORS.textMuted, textDecoration: "none", transition: "color 0.2s" }}>Meal Planner</a>
-            <a href="#history" style={{ color: COLORS.textMuted, textDecoration: "none", transition: "color 0.2s" }}>Datewise Logs</a>
-          </div>
-        )}
-
-        {/* Right CTA Area */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <ThemeSwitcher currentTheme={themeKey} onSelectTheme={onSelectTheme} COLORS={COLORS} />
-          
-          <button
-            onClick={() => onOpenAuth("login")}
-            style={{
-              ...S.btnOutline,
-              padding: isMobile ? "7px 12px" : "9px 18px",
-              fontSize: isMobile ? 12 : 13,
-            }}
-          >
-            Sign In
-          </button>
-
-          <button
-            onClick={() => onOpenAuth("register")}
-            style={{
-              ...S.btn,
-              padding: isMobile ? "7px 14px" : "9px 20px",
-              fontSize: isMobile ? 12 : 13,
-            }}
-          >
-            Get Started
-          </button>
-        </div>
-      </header>
-
-      {/* ─── Hero Section ─── */}
-      <section style={{
-        padding: isMobile ? "40px 16px 60px" : "80px 36px 100px",
-        maxWidth: 1200,
-        margin: "0 auto",
-        textAlign: "center",
-      }}>
-        {/* Glowing Badge */}
-        <div style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          background: "rgba(255,255,255,0.04)",
-          border: `1px solid ${COLORS.border}`,
-          padding: "6px 16px",
-          borderRadius: 30,
-          fontSize: 12,
-          fontWeight: 600,
-          color: COLORS.primaryLight,
-          marginBottom: 20,
-          boxShadow: "0 0 20px rgba(16,185,129,0.1)",
-        }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.primaryLight, display: "inline-block", boxShadow: COLORS.primaryGlow }} />
-          NEXT-GEN AI CALORIE & NUTRITION INTELLIGENCE
-        </div>
-
-        {/* Headline */}
-        <h1 style={{
-          fontSize: isMobile ? 32 : 56,
-          fontWeight: 800,
-          fontFamily: "'Outfit', sans-serif",
-          color: "#fff",
-          lineHeight: 1.15,
-          letterSpacing: "-0.03em",
-          maxWidth: 900,
-          margin: "0 auto 20px",
-        }}>
-          Smart Nutrition. Real Results. <br />
-          <span style={{
-            background: `linear-gradient(135deg, #fff 30%, ${COLORS.primaryLight} 70%, ${COLORS.blueLight} 100%)`,
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}>
-            Powered by AI Camera Vision.
-          </span>
-        </h1>
-
-        {/* Subtitle */}
-        <p style={{
-          fontSize: isMobile ? 15 : 18,
-          color: COLORS.textMuted,
-          lineHeight: 1.6,
-          maxWidth: 680,
-          margin: "0 auto 36px",
-        }}>
-          Snap food photos with your phone camera, generate tailored Veg & Non-Veg meal plans, and track your daily nutrition date-by-date in a private SQLite database.
-        </p>
-
-        {/* Action Buttons */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 14, flexWrap: "wrap", marginBottom: 48 }}>
-          <button
-            onClick={() => onOpenAuth("register")}
-            style={{
-              ...S.btn,
-              padding: "14px 34px",
-              fontSize: 16,
-              fontWeight: 700,
-              boxShadow: COLORS.primaryGlow,
-            }}
-          >
-            Get Started Free ➔
-          </button>
-
-          <button
-            onClick={() => onOpenAuth("login")}
-            style={{
-              ...S.btnOutline,
-              padding: "14px 28px",
-              fontSize: 15,
-              fontWeight: 600,
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              border: `1px solid ${COLORS.borderHover}`,
-              background: "rgba(255,255,255,0.03)",
-            }}
-          >
-            Sign In
-          </button>
-        </div>
-
-        {/* Live Visual Showcase Mockup */}
-        <div style={{
-          ...S.card,
-          maxWidth: 960,
-          margin: "0 auto",
-          padding: isMobile ? 16 : 28,
-          borderRadius: 24,
-          border: `1px solid ${COLORS.border}`,
-          boxShadow: "0 30px 80px -20px rgba(0,0,0,0.8), 0 0 60px rgba(16,185,129,0.12)",
-          position: "relative",
-          overflow: "hidden",
-        }}>
-          {/* Header in Mockup */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, borderBottom: `1px solid ${COLORS.border}`, paddingBottom: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ef4444" }} />
-              <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#f59e0b" }} />
-              <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#10b981" }} />
-              <span style={{ fontSize: 12, color: COLORS.textMuted, marginLeft: 8, fontFamily: "monospace" }}>nutriai.app/dashboard</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: COLORS.primaryLight, fontWeight: 600 }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: COLORS.primaryLight, display: "inline-block" }} />
-              Live Database Connected
-            </div>
-          </div>
-
-          {/* Cards Row in Mockup */}
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 14 }}>
-            {heroFoods.map((f, i) => (
-              <div key={i} style={{
-                background: "rgba(5, 8, 16, 0.6)",
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 16,
-                padding: 12,
-                display: "flex",
-                gap: 12,
-                alignItems: "center",
-                textAlign: "left",
-              }}>
-                <img
-                  src={f.img}
-                  alt={f.name}
-                  style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover", flexShrink: 0, border: `1px solid ${COLORS.border}` }}
-                />
-                <div style={{ overflow: "hidden", flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>{f.name}</div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: COLORS.accent, fontFamily: "'Outfit', sans-serif", margin: "2px 0" }}>{f.cals}</div>
-                  <div style={{ fontSize: 11, color: COLORS.textMuted }}>
-                    P: <strong style={{ color: COLORS.text }}>{f.p}</strong> | C: <strong style={{ color: COLORS.text }}>{f.c}</strong> | F: <strong style={{ color: COLORS.text }}>{f.f}</strong>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom Live Metrics in Mockup */}
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10, marginTop: 14 }}>
-            {[
-              { label: "Daily Calorie Target", val: "2,050 / 2,200", icon: "🔥", color: COLORS.accent },
-              { label: "Protein Intake", val: "148g (98%)", icon: "💪", color: COLORS.primaryLight },
-              { label: "Hydration Log", val: "2,250ml", icon: "💧", color: COLORS.blueLight },
-              { label: "Date Stored", val: "Saved to DB", icon: "💾", color: COLORS.yellow },
-            ].map((m, idx) => (
-              <div key={idx} style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "10px 14px", textAlign: "left" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: COLORS.textMuted }}>
-                  <span>{m.icon}</span> {m.label}
-                </div>
-                <div style={{ fontSize: 15, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: m.color, marginTop: 4 }}>
-                  {m.val}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Bento Grid Features Section ─── */}
-      <section id="features" style={{
-        padding: isMobile ? "40px 16px" : "80px 36px",
-        maxWidth: 1200,
-        margin: "0 auto",
-      }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <div style={{ color: COLORS.primaryLight, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
-            Intelligent Health Features
-          </div>
-          <h2 style={{ fontSize: isMobile ? 26 : 38, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: "#fff", letterSpacing: "-0.02em" }}>
-            Everything You Need To Master Your Diet
-          </h2>
-          <p style={{ color: COLORS.textMuted, fontSize: 15, maxWidth: 560, margin: "10px auto 0" }}>
-            Engineered with modern AI tools, SQLite persistence, and camera vision for seamless nutrition management.
-          </p>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 16 }}>
-          {features.map((ft, i) => (
-            <div
-              key={i}
-              style={{
-                ...S.card,
-                padding: "24px 22px",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                position: "relative",
-                transition: "all 0.2s ease",
-              }}
-            >
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <div style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 12,
-                    background: "rgba(255,255,255,0.05)",
-                    border: `1px solid ${COLORS.border}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 22,
-                  }}>
-                    {ft.icon}
-                  </div>
-                  <span style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: "4px 10px",
-                    borderRadius: 20,
-                    background: "rgba(255,255,255,0.05)",
-                    border: `1px solid ${COLORS.border}`,
-                    color: ft.color,
-                  }}>
-                    {ft.badge}
-                  </span>
-                </div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 8 }}>
-                  {ft.title}
-                </h3>
-                <p style={{ fontSize: 13, color: COLORS.textMuted, lineHeight: 1.6 }}>
-                  {ft.desc}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── How It Works 3-Step Timeline ─── */}
-      <section style={{
-        padding: isMobile ? "40px 16px" : "60px 36px 80px",
-        maxWidth: 1000,
-        margin: "0 auto",
-        textAlign: "center",
-      }}>
-        <h2 style={{ fontSize: isMobile ? 24 : 34, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 36 }}>
-          How NutriAI Works in 3 Simple Steps
-        </h2>
-
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: 20 }}>
-          {[
-            { step: "01", title: "Snap or Search Food", desc: "Take a picture with your phone camera or type the name of any dish, ingredient, or recipe." },
-            { step: "02", title: "AI Calculates Macros", desc: "AI computes exact calories, protein, carbs, fats, fiber, and sugar with verified food databases." },
-            { step: "03", title: "Track Date-wise", desc: "Log to SQLite for any selected calendar date and monitor your progress over time." },
-          ].map((st, i) => (
-            <div key={i} style={{ ...S.card, padding: "24px 20px", textAlign: "left" }}>
-              <div style={{ fontSize: 28, fontWeight: 900, fontFamily: "'Outfit', sans-serif", color: COLORS.primaryLight, marginBottom: 12 }}>
-                {st.step}
-              </div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: "#fff", marginBottom: 8 }}>{st.title}</div>
-              <div style={{ fontSize: 13, color: COLORS.textMuted, lineHeight: 1.6 }}>{st.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── Bottom CTA Banner ─── */}
-      <section style={{
-        padding: isMobile ? "40px 16px 80px" : "60px 36px 100px",
-        maxWidth: 960,
-        margin: "0 auto",
-        textAlign: "center",
-      }}>
-        <div style={{
-          background: `linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(5,8,16,0.9) 100%)`,
-          border: `1px solid ${COLORS.borderHover}`,
-          borderRadius: 24,
-          padding: isMobile ? "36px 20px" : "56px 40px",
-          boxShadow: COLORS.primaryGlow,
-        }}>
-          <h2 style={{ fontSize: isMobile ? 26 : 40, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 16 }}>
-            Ready to Take Control of Your Nutrition?
-          </h2>
-          <p style={{ color: COLORS.textMuted, fontSize: 15, maxWidth: 540, margin: "0 auto 28px", lineHeight: 1.6 }}>
-            Join thousands tracking their calories, generating AI meal plans, and achieving their fitness targets effortlessly.
-          </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: 14, flexWrap: "wrap" }}>
-            <button
-              onClick={() => onOpenAuth("register")}
-              style={{ ...S.btn, padding: "14px 36px", fontSize: 15, fontWeight: 700 }}
-            >
-              Create Free Account ➔
-            </button>
-            <button
-              onClick={() => onOpenAuth("login")}
-              style={{ ...S.btnOutline, padding: "14px 28px", fontSize: 15, fontWeight: 600 }}
-            >
-              Sign In
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Footer ─── */}
-      <footer style={{
-        borderTop: `1px solid ${COLORS.border}`,
-        padding: "24px 36px",
-        textAlign: "center",
-        fontSize: 13,
-        color: COLORS.textMuted,
-        background: "rgba(5, 8, 16, 0.9)",
-      }}>
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginBottom: 8 }}>
-          <span style={{ fontWeight: 700, color: "#fff" }}>NutriAI</span> — Intelligent Nutrition & Calorie Assistant
-        </div>
-        <div>© {new Date().getFullYear()} NutriAI Platform. All rights reserved.</div>
-      </footer>
-    </div>
-  );
-}
 
 // ─── REAL-WORLD FOOD PHOTOGRAPHY LIBRARY ──────────────────────────
 const FOOD_PHOTOS = {
@@ -1739,7 +1572,7 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
       {/* Header & Date Navigation Bar */}
       <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", flexDirection: isMobile ? "column" : "row", gap: 14 }}>
         <div>
-          <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: "#fff", letterSpacing: "-0.02em" }}>
+          <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: COLORS.text, letterSpacing: "-0.02em" }}>
             Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, {user?.name?.split(" ")[0]} 👋
           </div>
           <div style={{ color: COLORS.textMuted, marginTop: 4, fontSize: 14 }}>
@@ -1830,7 +1663,7 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
         <div style={{ ...S.card, marginBottom: 24, animation: "fadeUp 0.3s ease", border: `1px solid ${COLORS.primaryLight}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff" }}>
+              <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text }}>
                 📅 Date-Wise Activity & Nutrition History
               </div>
               <div style={{ fontSize: 12, color: COLORS.textMuted }}>Tap any past date to load its full nutritional records</div>
@@ -1857,7 +1690,7 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
                       cursor: "pointer",
                       padding: 14,
                       border: `1px solid ${active ? COLORS.primaryLight : COLORS.border}`,
-                      background: active ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)",
+                      background: active ? "rgba(255,255,255,0.08)" : "transparent",
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
@@ -1894,9 +1727,9 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
       </div>
 
       {/* Quick Add Presets Bar (Logs to Selected Date) */}
-      <div style={{ ...S.card, padding: "16px 20px", marginBottom: 24, background: "rgba(255,255,255,0.03)" }}>
+      <div style={{ ...S.card, padding: "16px 20px", marginBottom: 24, background: "#fbf9f6" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, textTransform: "uppercase", letterSpacing: "0.05em" }}>
             ⚡ 1-Click Quick Log Presets (for {isToday ? "Today" : currentDate})
           </div>
           <span style={{ fontSize: 12, color: COLORS.textMuted }}>Tap to log instantly to database</span>
@@ -1907,7 +1740,7 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
               key={p.name}
               onClick={() => onSaveQuickMeal && onSaveQuickMeal(p, currentDate)}
               style={{
-                background: "rgba(255,255,255,0.04)",
+                background: "rgba(0,0,0,0.04)",
                 border: `1px solid ${COLORS.border}`,
                 borderRadius: 12,
                 padding: "8px 10px",
@@ -1951,14 +1784,14 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
         <div style={{ ...S.card, minWidth: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff" }}>7-Day Calorie Trend</div>
+              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text }}>7-Day Calorie Trend</div>
               <div style={{ fontSize: 12, color: COLORS.textMuted }}>Intake around {currentDate}</div>
             </div>
           </div>
           <div style={{ height: 210, width: "100%", minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={weekly}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
                 <XAxis dataKey="day" tick={{ fill: COLORS.textMuted, fontSize: 12 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: COLORS.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={{ background: COLORS.bgCardSolid, border: `1px solid ${COLORS.border}`, borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.6)" }} labelStyle={{ color: COLORS.text, fontWeight: 600 }} itemStyle={{ color: COLORS.primaryLight }} />
@@ -1975,7 +1808,7 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
         </div>
 
         <div style={{ ...S.card, minWidth: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 4 }}>Macronutrient Ratio</div>
+          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 4 }}>Macronutrient Ratio</div>
           <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>Distribution for {currentDate}</div>
           <div style={{ height: 180, width: "100%", minWidth: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -2006,7 +1839,7 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
       }}>
         {/* Nutrient Progress */}
         <div style={S.card}>
-          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 18 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 18 }}>
             Daily Targets ({currentDate})
           </div>
           <NutrientBar label="Calories" value={totals.calories} max={safeGoals.calories} color={COLORS.accent} COLORS={COLORS} />
@@ -2018,7 +1851,7 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
 
         {/* Water Tracker (Specific to Selected Date) */}
         <div style={S.card}>
-          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 4 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 4 }}>
             💧 Water Log ({currentDate})
           </div>
           <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 16 }}>Saved in database for this date</div>
@@ -2030,7 +1863,7 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
               width: 86,
               height: 86,
               borderRadius: "50%",
-              background: `conic-gradient(${COLORS.blue} ${Math.round((currentWater / 2500) * 360)}deg, rgba(255,255,255,0.06) 0deg)`,
+              background: `conic-gradient(${COLORS.blue} ${Math.round((currentWater / 2500) * 360)}deg, rgba(0, 0, 0, 0.06) 0deg)`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -2050,7 +1883,7 @@ function Dashboard({ user, meals = [], goals, water, setWater, selectedDate, set
         {/* Meals Logged on Selected Date */}
         <div style={S.card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff" }}>
+            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text }}>
               Logged Meals
             </div>
             <span style={{ fontSize: 12, color: COLORS.textMuted }}>{dateMeals.length} items</span>
@@ -2363,7 +2196,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
       />
 
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: "#fff", letterSpacing: "-0.02em" }}>
+        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: COLORS.text, letterSpacing: "-0.02em" }}>
           Nutrition Calculator & Phone Scanner
         </div>
         <div style={{ color: COLORS.textMuted, marginTop: 4, fontSize: 14 }}>
@@ -2379,7 +2212,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
               📸
             </div>
             <div>
-              <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff" }}>
+              <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text }}>
                 AI Visual Food Scanner
               </div>
               <div style={{ fontSize: 12, color: COLORS.textMuted }}>Snap a picture of your food plate to calculate calories</div>
@@ -2414,7 +2247,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
               alignItems: "center",
               justifyContent: "center",
             }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#fff", background: "rgba(0,0,0,0.6)", padding: "4px 10px", borderRadius: 12 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.text, background: "rgba(0,0,0,0.6)", padding: "4px 10px", borderRadius: 12 }}>
                 🎯 Center your meal inside frame
               </span>
             </div>
@@ -2498,7 +2331,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
                   gap: 12,
                 }}>
                   <Spinner COLORS={COLORS} />
-                  <div style={{ color: "#fff", fontWeight: 700, fontSize: 15, fontFamily: "'Outfit', sans-serif" }}>
+                  <div style={{ color: COLORS.text, fontWeight: 700, fontSize: 15, fontFamily: "'Outfit', sans-serif" }}>
                     Scanning food items & calculating macros...
                   </div>
                 </div>
@@ -2554,7 +2387,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
                   padding: "16px",
                   fontSize: 15,
                   borderRadius: 14,
-                  background: "rgba(255,255,255,0.04)",
+                  background: "rgba(0,0,0,0.04)",
                 }}
               >
                 <span style={{ fontSize: 22 }}>🖼️</span>
@@ -2576,7 +2409,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
               onClick={() => document.getElementById('gallery-upload').click()}
             >
               <div style={{ fontSize: 32, marginBottom: 6 }}>🥗 ➔ 📊</div>
-              <div style={{ color: "#fff", fontWeight: 600, fontSize: 14, marginBottom: 2 }}>
+              <div style={{ color: COLORS.text, fontWeight: 600, fontSize: 14, marginBottom: 2 }}>
                 Point camera at your meal plate, breakfast bowl, or restaurant dish
               </div>
               <div style={{ fontSize: 12, color: COLORS.textMuted }}>
@@ -2589,7 +2422,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
 
       {/* ─── Search by Text Card ─── */}
       <div style={{ ...S.card, marginBottom: 20 }}>
-        <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 14 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 14 }}>
           Or Search / Type Any Food
         </div>
 
@@ -2599,7 +2432,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
             <button key={f} onClick={() => setFilter(f)} style={{
               padding: "7px 14px", borderRadius: 20,
               border: `1px solid ${filter === f ? COLORS.primaryLight : COLORS.border}`,
-              background: filter === f ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.02)",
+              background: filter === f ? "rgba(255,255,255,0.08)" : "transparent",
               color: filter === f ? COLORS.primaryLight : COLORS.textMuted,
               fontSize: 12, fontWeight: filter === f ? 700 : 500, cursor: "pointer",
               whiteSpace: "nowrap", transition: "all 0.2s ease",
@@ -2674,7 +2507,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
           }}>
             <span style={{ fontSize: 18 }}>⚠️</span>
             <div style={{ lineHeight: 1.5 }}>
-              <strong style={{ color: "#fff" }}>Invalid Food Item: </strong>
+              <strong style={{ color: COLORS.text }}>Invalid Food Item: </strong>
               <span>{error}</span>
             </div>
           </div>
@@ -2687,12 +2520,12 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
           {/* Recognized Food Components (from photo scanning) */}
           {result.foods && result.foods.length > 0 && (
             <div style={{ ...S.card, marginBottom: 16 }}>
-              <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
                 <span>🔍</span> AI Recognized Dish Ingredients:
               </div>
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : `repeat(${Math.min(3, result.foods.length)}, 1fr)`, gap: 10 }}>
                 {result.foods.map((f, idx) => (
-                  <div key={idx} style={{ ...S.metricCard, padding: 12, background: "rgba(255,255,255,0.03)", display: "flex", alignItems: "center", gap: 10 }}>
+                  <div key={idx} style={{ ...S.metricCard, padding: 12, background: "#fbf9f6", display: "flex", alignItems: "center", gap: 10 }}>
                     <img
                       src={getFoodPhoto(f.name)}
                       alt={f.name}
@@ -2706,7 +2539,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
                       }}
                     />
                     <div style={{ overflow: "hidden", flex: 1 }}>
-                      <div style={{ fontWeight: 600, color: "#fff", fontSize: 13, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>{f.name}</div>
+                      <div style={{ fontWeight: 600, color: COLORS.text, fontSize: 13, whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>{f.name}</div>
                       <div style={{ fontSize: 15, fontWeight: 800, color: COLORS.accent, fontFamily: "'Outfit', sans-serif" }}>{f.calories} kcal</div>
                       <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>
                         P: {f.protein}g | C: {f.carbs}g | F: {f.fat}g
@@ -2744,13 +2577,13 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
 
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
             <div style={{ ...S.card, minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 16 }}>
                 Macronutrient Ratio — {result.name}
               </div>
               <div style={{ height: 210, width: "100%", minWidth: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={macroChart} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" horizontal={false} />
                     <XAxis type="number" tick={{ fill: COLORS.textMuted, fontSize: 12 }} axisLine={false} />
                     <YAxis dataKey="name" type="category" tick={{ fill: COLORS.textMuted, fontSize: 12 }} axisLine={false} tickLine={false} width={55} />
                     <Tooltip contentStyle={{ background: COLORS.bgCardSolid, border: `1px solid ${COLORS.border}`, borderRadius: 10 }} itemStyle={{ color: COLORS.primaryLight }} />
@@ -2763,22 +2596,22 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
             </div>
 
             <div style={S.card}>
-              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 4 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 4 }}>
                 🤖 AI Nutrition Insight
               </div>
               <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>Personalized recommendation</div>
               {tipLoading ? <Spinner COLORS={COLORS} /> : aiTip ? (
-                <div style={{ fontSize: 14, lineHeight: 1.7, color: COLORS.text, background: "rgba(255,255,255,0.05)", border: `1px solid ${COLORS.border}`, padding: "14px", borderRadius: 12, borderLeft: `4px solid ${COLORS.primaryLight}` }}>
+                <div style={{ fontSize: 14, lineHeight: 1.7, color: COLORS.text, background: "#fbf9f6", border: `1px solid ${COLORS.border}`, padding: "14px", borderRadius: 12, borderLeft: `4px solid ${COLORS.primaryLight}` }}>
                   {aiTip}
                 </div>
               ) : null}
               <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontSize: 13, color: COLORS.textMuted }}>Serving: <span style={{ color: "#fff", fontWeight: 600 }}>{result.serving}</span></div>
-                {result.sodium !== undefined && <div style={{ fontSize: 13, color: COLORS.textMuted }}>Sodium: <span style={{ color: "#fff", fontWeight: 600 }}>{Math.round(result.sodium)}mg</span></div>}
+                <div style={{ fontSize: 13, color: COLORS.textMuted }}>Serving: <span style={{ color: COLORS.text, fontWeight: 600 }}>{result.serving}</span></div>
+                {result.sodium !== undefined && <div style={{ fontSize: 13, color: COLORS.textMuted }}>Sodium: <span style={{ color: COLORS.text, fontWeight: 600 }}>{Math.round(result.sodium)}mg</span></div>}
               </div>
 
               {/* Log Date Selector */}
-              <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.03)", padding: "8px 12px", borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
+              <div style={{ marginTop: 14, display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fbf9f6", padding: "8px 12px", borderRadius: 10, border: `1px solid ${COLORS.border}` }}>
                 <span style={{ fontSize: 12, color: COLORS.textMuted, fontWeight: 600 }}>📅 Save to Date:</span>
                 <input
                   type="date"
@@ -2816,7 +2649,7 @@ function NutritionCalc({ onSave, selectedDate, COLORS, S, isMobile }) {
       {/* Search History */}
       {searchHistory.length > 0 && (
         <div style={S.card}>
-          <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 12 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 12 }}>
             Recent Searches
           </div>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 10 }}>
@@ -2901,7 +2734,7 @@ function MealPlanner({ user, COLORS, S, isMobile }) {
   return (
     <div style={{ animation: "fadeUp 0.3s ease" }}>
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: "#fff", letterSpacing: "-0.02em" }}>
+        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: COLORS.text, letterSpacing: "-0.02em" }}>
           AI Meal Planner — Veg & Non-Veg
         </div>
         <div style={{ color: COLORS.textMuted, marginTop: 4, fontSize: 14 }}>
@@ -2910,7 +2743,7 @@ function MealPlanner({ user, COLORS, S, isMobile }) {
       </div>
 
       <div style={S.card}>
-        <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 14 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 14 }}>
           1. Select Dietary Preference
         </div>
 
@@ -2963,7 +2796,7 @@ function MealPlanner({ user, COLORS, S, isMobile }) {
                   type="button"
                   onClick={() => setCalGoal(c)}
                   style={{
-                    background: calGoal === c ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.02)",
+                    background: calGoal === c ? "rgba(255,255,255,0.12)" : "transparent",
                     border: `1px solid ${calGoal === c ? COLORS.primaryLight : COLORS.border}`,
                     color: calGoal === c ? COLORS.primaryLight : COLORS.textMuted,
                     borderRadius: 8,
@@ -3012,7 +2845,7 @@ function MealPlanner({ user, COLORS, S, isMobile }) {
       {plan && (
         <div style={{ ...S.card, marginTop: 20, animation: "fadeUp 0.4s ease" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff" }}>
+            <div style={{ fontSize: 17, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text }}>
               {preference === "both" ? "Veg vs Non-Veg Comparative Meal Plans" : preference === "veg" ? "🌱 Your Custom Vegetarian Meal Plan" : preference === "nonveg" ? "🥩 Your Custom Non-Vegetarian Meal Plan" : "Personalized Daily Nutrition Plan"}
             </div>
             <span style={S.tag}>✨ AI Optimized</span>
@@ -3025,14 +2858,14 @@ function MealPlanner({ user, COLORS, S, isMobile }) {
               }
               if (line.match(/^(🟢|🌱|🥩|🥚|🌿)/i) || line.includes("MEAL PLAN") || line.includes("PLAN (")) {
                 return (
-                  <div key={i} style={{ color: COLORS.primaryLight, fontWeight: 800, marginTop: 16, marginBottom: 8, fontSize: 16, fontFamily: "'Outfit', sans-serif", display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", padding: "8px 12px", borderRadius: 8 }}>
+                  <div key={i} style={{ color: COLORS.primaryLight, fontWeight: 800, marginTop: 16, marginBottom: 8, fontSize: 16, fontFamily: "'Outfit', sans-serif", display: "flex", alignItems: "center", gap: 6, background: "#fbf9f6", padding: "8px 12px", borderRadius: 8 }}>
                     {line}
                   </div>
                 );
               }
               if (line.match(/^(🍳 Breakfast|🍎 Morning Snack|🥗 Lunch|🥜 Afternoon Snack|🍽️ Dinner)/i)) {
                 return (
-                  <div key={i} style={{ color: "#fff", fontWeight: 600, marginTop: 12, marginBottom: 4, fontSize: 14, display: "flex", alignItems: "flex-start", gap: 8 }}>
+                  <div key={i} style={{ color: COLORS.text, fontWeight: 600, marginTop: 12, marginBottom: 4, fontSize: 14, display: "flex", alignItems: "flex-start", gap: 8 }}>
                     <span>{line}</span>
                   </div>
                 );
@@ -3086,7 +2919,7 @@ function AIRecommendations({ user, COLORS, S, isMobile }) {
   return (
     <div style={{ animation: "fadeUp 0.3s ease" }}>
       <div style={{ marginBottom: 28 }}>
-        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: "#fff", letterSpacing: "-0.02em" }}>
+        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: COLORS.text, letterSpacing: "-0.02em" }}>
           AI Health & Nutrition Advisor
         </div>
         <div style={{ color: COLORS.textMuted, marginTop: 4, fontSize: 14 }}>
@@ -3097,7 +2930,7 @@ function AIRecommendations({ user, COLORS, S, isMobile }) {
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: 16 }}>
         <div>
           <div style={S.card}>
-            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 14 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 14 }}>
               User Profile
             </div>
             {[
@@ -3108,7 +2941,7 @@ function AIRecommendations({ user, COLORS, S, isMobile }) {
             ].map(([label, value]) => (
               <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${COLORS.border}` }}>
                 <span style={{ color: COLORS.textMuted, fontSize: 13 }}>{label}</span>
-                <span style={{ color: "#fff", fontWeight: 600, fontSize: 13 }}>{value}</span>
+                <span style={{ color: COLORS.text, fontWeight: 600, fontSize: 13 }}>{value}</span>
               </div>
             ))}
             <div style={{ marginTop: 18 }}>
@@ -3121,7 +2954,7 @@ function AIRecommendations({ user, COLORS, S, isMobile }) {
               </select>
             </div>
             {tdee && (
-              <div style={{ marginTop: 18, padding: 14, background: "rgba(255,255,255,0.04)", border: `1px solid ${COLORS.border}`, borderRadius: 12 }}>
+              <div style={{ marginTop: 18, padding: 14, background: "#fbf9f6", border: `1px solid ${COLORS.border}`, borderRadius: 12 }}>
                 <div style={{ fontSize: 12, color: COLORS.textMuted }}>Estimated Maintenance (TDEE)</div>
                 <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Outfit', sans-serif", color: COLORS.primaryLight }}>{tdee} kcal</div>
               </div>
@@ -3130,7 +2963,7 @@ function AIRecommendations({ user, COLORS, S, isMobile }) {
         </div>
 
         <div style={S.card}>
-          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: "#fff", marginBottom: 14 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Outfit', sans-serif", color: COLORS.text, marginBottom: 14 }}>
             Tailored Nutrition Strategy
           </div>
           {loading ? (
@@ -3290,10 +3123,123 @@ export default function NutritionApp() {
     }
   };
 
+  const [showAdminFromLanding, setShowAdminFromLanding] = useState(false);
+
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash === "#admin" || window.location.pathname === "/admin") {
+        setShowAdminFromLanding(true);
+        setPage("admin");
+      }
+    };
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, []);
+
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: currentTheme.bgGradient }}>
         <Spinner COLORS={currentTheme} />
+      </div>
+    );
+  }
+
+  // Allow visiting the Admin Dashboard directly from the Landing Page or #admin
+  if (!user && showAdminFromLanding) {
+    return (
+      <div style={{ minHeight: "100vh", background: currentTheme.bgGradient }}>
+        {/* Sticky Admin Header for Guest / Manager */}
+        <div style={{
+          background: "#ffffff",
+          borderBottom: `1px solid ${currentTheme.border}`,
+          padding: isMobile ? "12px 16px" : "14px 32px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <img src="/apple-gauge-logo.svg" alt="Logo" style={{ width: 36, height: 36 }} />
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 17, color: currentTheme.text, fontFamily: "'Outfit', sans-serif", letterSpacing: "-0.01em" }}>
+                Calory Calculator • Admin Console
+              </div>
+              <div style={{ fontSize: 11, color: "#237a44", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#237a44", display: "inline-block" }}></span>
+                <span>Live Supabase User Management</span>
+              </div>
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button
+              onClick={() => {
+                setShowAdminFromLanding(false);
+                if (window.location.hash === "#admin") {
+                  window.history.pushState(null, "", window.location.pathname);
+                }
+              }}
+              style={{
+                background: "#f4efe9",
+                border: "1px solid #e4e4e7",
+                color: "#18181b",
+                padding: "8px 16px",
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                transition: "all 0.15s ease",
+              }}
+            >
+              <span>←</span>
+              <span>Back to Landing Page</span>
+            </button>
+            <button
+              onClick={() => setAuthModalMode("login")}
+              style={{
+                background: "#237a44",
+                border: "none",
+                color: "#ffffff",
+                padding: "8px 18px",
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
+
+        <div style={{ maxWidth: 1240, margin: "0 auto", padding: isMobile ? "16px 12px 40px" : "28px 24px 60px" }}>
+          <AdminDashboard
+            user={{ name: "Admin Portal", email: "admin@nutriai.com", role: "admin" }}
+            COLORS={currentTheme}
+            S={S}
+            isMobile={isMobile}
+          />
+        </div>
+
+        {authModalMode && (
+          <AuthModal
+            initialMode={authModalMode}
+            onLogin={(u) => {
+              handleLogin(u);
+              setShowAdminFromLanding(false);
+            }}
+            onClose={() => setAuthModalMode(null)}
+            COLORS={currentTheme}
+            S={S}
+            isMobile={isMobile}
+          />
+        )}
       </div>
     );
   }
@@ -3303,6 +3249,10 @@ export default function NutritionApp() {
       <>
         <LandingPage
           onOpenAuth={(m) => setAuthModalMode(m || "login")}
+          onOpenAdmin={() => {
+            setShowAdminFromLanding(true);
+            setPage("admin");
+          }}
           themeKey={themeKey}
           onSelectTheme={handleSelectTheme}
           COLORS={currentTheme}
@@ -3335,14 +3285,36 @@ export default function NutritionApp() {
               ["calculator", "📊", "Calculator"],
               ["planner", "📅", "Meal Planner"],
               ["recommendations", "💡", "AI Recs"],
+              ["admin", "🛡️", "Admin Panel"],
             ].map(([key, icon, label]) => (
               <div
                 key={key}
-                style={S.navItem(page === key)}
+                style={{
+                  ...S.navItem(page === key),
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
                 onClick={() => setPage(key)}
               >
-                <span style={{ fontSize: 18 }}>{icon}</span>
-                <span>{label}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <span style={{ fontSize: 18 }}>{icon}</span>
+                  <span>{label}</span>
+                </div>
+                {key === "admin" && (
+                  <span style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    background: "rgba(35, 122, 68, 0.12)",
+                    color: "#237a44",
+                    border: "1px solid rgba(35, 122, 68, 0.3)",
+                    padding: "2px 7px",
+                    borderRadius: 9999,
+                    letterSpacing: "0.04em",
+                  }}>
+                    SUPABASE
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -3401,6 +3373,7 @@ export default function NutritionApp() {
           {page === "calculator" && <NutritionCalc onSave={handleMealSaved} selectedDate={selectedDate} COLORS={currentTheme} S={S} isMobile={isMobile} />}
           {page === "planner" && <MealPlanner user={user} COLORS={currentTheme} S={S} isMobile={isMobile} />}
           {page === "recommendations" && <AIRecommendations user={user} COLORS={currentTheme} S={S} isMobile={isMobile} />}
+          {page === "admin" && <AdminDashboard user={user} COLORS={currentTheme} S={S} isMobile={isMobile} />}
         </div>
 
         {/* Mobile Bottom Navigation */}
