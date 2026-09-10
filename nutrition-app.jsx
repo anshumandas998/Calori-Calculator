@@ -939,8 +939,9 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
   const [customName, setCustomName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showDevInfo, setShowDevInfo] = useState(false);
 
-  const handleSignIn = async (email, name, avatar, credential) => {
+  const handleSignIn = async (email, name, avatar, credential, accessToken) => {
     const safeEmail = (email || "").trim().toLowerCase();
     const safeName = (name || safeEmail.split("@")[0] || "Google User").trim();
     const safeAvatar = avatar || safeName.charAt(0).toUpperCase() || "G";
@@ -953,7 +954,8 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/google", {
+      const endpoint = `${API_BASE || ""}/api/auth/google`;
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -961,6 +963,7 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
           name: safeName,
           avatar: safeAvatar,
           credential,
+          access_token: accessToken,
         })
       });
       const data = await res.json();
@@ -983,49 +986,116 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
     }
   };
 
+  const triggerNativeGooglePopup = () => {
+    setError("");
+    setLoading(true);
+
+    if (window.google?.accounts?.oauth2) {
+      try {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: "email profile openid",
+          callback: async (tokenResponse) => {
+            if (tokenResponse?.error) {
+              setLoading(false);
+              setError(`Google Sign-In returned: ${tokenResponse.error_description || tokenResponse.error}. If using localhost, add http://localhost:5173 to Authorized JavaScript origins in Google Cloud Console.`);
+              return;
+            }
+            if (tokenResponse?.access_token) {
+              try {
+                const infoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                });
+                if (!infoRes.ok) throw new Error("Could not retrieve Google profile info");
+                const profile = await infoRes.json();
+                await handleSignIn(profile.email, profile.name, profile.picture, null, tokenResponse.access_token);
+              } catch (e) {
+                setLoading(false);
+                setError(e.message || "Failed to fetch Google profile");
+              }
+            } else {
+              setLoading(false);
+            }
+          },
+          error_callback: (err) => {
+            console.warn("Google OAuth error:", err);
+            setLoading(false);
+            setError("Google OAuth notice: Popup closed or origin not whitelisted in Google Cloud Console. You can use 1-click continue below!");
+          }
+        });
+        tokenClient.requestAccessToken({ prompt: "select_account" });
+        return;
+      } catch (err) {
+        console.warn("initTokenClient failed:", err);
+      }
+    }
+
+    // Direct popup window fallback
+    try {
+      const redirectUri = window.location.origin;
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(GOOGLE_CLIENT_ID)}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=email%20profile%20openid&prompt=select_account`;
+      const popup = window.open(authUrl, "GoogleSignIn", "width=500,height=600,menubar=no,toolbar=no");
+      setLoading(false);
+      if (!popup || popup.closed) {
+        setError("Popup was blocked by your browser. Please allow popups or use 1-click continue below.");
+      }
+    } catch (err) {
+      setLoading(false);
+      setError("Unable to launch Google popup: " + err.message);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
-    if (window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: async (response) => {
-            if (response?.credential) {
-              setLoading(true);
-              setError("");
-              try {
-                const base64Url = response.credential.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-                const payload = JSON.parse(jsonPayload);
-                await handleSignIn(payload.email, payload.name, payload.picture, response.credential);
-              } catch (err) {
-                setError(err.message || "Google credential verification failed.");
-                setLoading(false);
+    let retryCount = 0;
+    const tryInitGsi = () => {
+      if (window.google?.accounts?.id) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: async (response) => {
+              if (response?.credential) {
+                setLoading(true);
+                setError("");
+                try {
+                  const base64Url = response.credential.split('.')[1];
+                  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                  const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                  const payload = JSON.parse(jsonPayload);
+                  await handleSignIn(payload.email, payload.name, payload.picture, response.credential);
+                } catch (err) {
+                  setError(err.message || "Google credential verification failed.");
+                  setLoading(false);
+                }
               }
-            }
-          },
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-
-        const btnEl = document.getElementById("google-official-btn-container");
-        if (btnEl) {
-          btnEl.innerHTML = "";
-          window.google.accounts.id.renderButton(btnEl, {
-            type: "standard",
-            theme: "outline",
-            size: "large",
-            text: "continue_with",
-            shape: "pill",
-            width: isMobile ? 270 : 340,
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true,
           });
+
+          const btnEl = document.getElementById("google-official-btn-container");
+          if (btnEl) {
+            btnEl.innerHTML = "";
+            window.google.accounts.id.renderButton(btnEl, {
+              type: "standard",
+              theme: "outline",
+              size: "large",
+              text: "continue_with",
+              shape: "pill",
+              width: isMobile ? 270 : 340,
+            });
+          }
+        } catch (err) {
+          console.warn("GSI init notice:", err);
         }
-      } catch (err) {
-        console.warn("GSI init notice:", err);
+      } else if (retryCount < 5) {
+        retryCount++;
+        setTimeout(tryInitGsi, 300);
       }
-    }
+    };
+
+    tryInitGsi();
   }, [isOpen, isMobile]);
 
   if (!isOpen) return null;
@@ -1034,9 +1104,9 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
     <div style={{
       position: "fixed",
       inset: 0,
-      background: "rgba(0, 0, 0, 0.65)",
-      backdropFilter: "blur(10px)",
-      WebkitBackdropFilter: "blur(10px)",
+      background: "rgba(0, 0, 0, 0.68)",
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
       zIndex: 10001,
       display: "flex",
       alignItems: "center",
@@ -1047,15 +1117,15 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
       <div style={{
         background: "#ffffff",
         borderRadius: 24,
-        padding: isMobile ? 24 : 36,
+        padding: isMobile ? "24px 20px" : "32px 32px",
         width: "100%",
-        maxWidth: 440,
-        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+        maxWidth: 450,
+        boxShadow: "0 25px 60px -12px rgba(0, 0, 0, 0.35)",
         position: "relative",
         border: "1px solid rgba(0, 0, 0, 0.08)",
         overflow: "hidden",
       }}>
-        {/* Animated Google loading bar on top when busy */}
+        {/* Animated Google Loading Bar */}
         {loading && (
           <div style={{
             position: "absolute",
@@ -1077,9 +1147,9 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
             position: "absolute",
             top: 18,
             right: 18,
-            background: "none",
+            background: "#f4f4f5",
             border: "none",
-            fontSize: 20,
+            fontSize: 16,
             cursor: "pointer",
             color: "#71717a",
             width: 32,
@@ -1088,15 +1158,18 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
             alignItems: "center",
             justifyContent: "center",
             borderRadius: "50%",
+            transition: "all 0.15s ease",
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#e4e4e7"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "#f4f4f5"; }}
         >
           ✕
         </button>
 
         {/* Google Header */}
-        <div style={{ textAlign: "center", marginBottom: 18 }}>
-          <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: 10 }}>
-            <svg width="40" height="40" viewBox="0 0 24 24">
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{ display: "inline-flex", justifyContent: "center", marginBottom: 8 }}>
+            <svg width="44" height="44" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
@@ -1104,21 +1177,19 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
             </svg>
           </div>
           <h3 style={{
-            fontSize: 21,
-            fontWeight: 700,
+            fontSize: 22,
+            fontWeight: 800,
             fontFamily: "'Outfit', sans-serif",
             color: "#18181b",
             margin: "0 0 6px 0",
+            letterSpacing: "-0.02em",
           }}>
-            Sign in with Google
+            {isAdminMode ? "Admin Access with Google" : "Continue with Google"}
           </h3>
           <p style={{ fontSize: 13, color: "#71717a", margin: 0, lineHeight: 1.5 }}>
             {isAdminMode ? "Choose an authorized Google account to unlock Admin Console" : "Choose an account to continue to Calory Calculator"}
           </p>
         </div>
-
-        {/* Official Google One Tap Button Container */}
-        <div id="google-official-btn-container" style={{ display: "flex", justifyContent: "center", marginBottom: 14, minHeight: 44 }} />
 
         {/* Error banner */}
         {error && (
@@ -1127,7 +1198,7 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
             border: "1px solid #fecaca",
             color: "#b91c1c",
             borderRadius: 12,
-            padding: "10px 14px",
+            padding: "11px 14px",
             fontSize: 13,
             marginBottom: 16,
             display: "flex",
@@ -1136,190 +1207,242 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
             lineHeight: 1.4,
           }}>
             <span style={{ fontSize: 16 }}>⚠️</span>
-            <span>{error}</span>
+            <div style={{ flex: 1 }}>{error}</div>
           </div>
         )}
 
+        {/* PRIMARY ACTION: Continue with Google Option */}
         <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          margin: "8px 0 16px",
+          background: "linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)",
+          border: "2px solid #22c55e",
+          borderRadius: 18,
+          padding: 16,
+          marginBottom: 14,
+          boxShadow: "0 4px 16px rgba(34, 197, 94, 0.12)",
         }}>
-          <div style={{ flex: 1, height: 1, background: "#e4e4e7" }} />
-          <span style={{ fontSize: 11, color: "#a1a1aa", textTransform: "uppercase", fontWeight: 700 }}>OR SELECT ACCOUNT</span>
-          <div style={{ flex: 1, height: 1, background: "#e4e4e7" }} />
-        </div>
-
-        {activeTab === "select" ? (
-          <div>
-            {/* Account Selector Cards */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 18 }}>
-              {/* Primary Account: Anshuman Das */}
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleSignIn("anshumand108@gmail.com", "Anshuman Das")}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  width: "100%",
-                  padding: "12px 14px",
-                  background: "#ffffff",
-                  border: "1px solid #e4e4e7",
-                  borderRadius: 14,
-                  cursor: loading ? "wait" : "pointer",
-                  textAlign: "left",
-                  transition: "all 0.15s ease",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#1a73e8";
-                  e.currentTarget.style.background = "#f8fafd";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(26,115,232,0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "#e4e4e7";
-                  e.currentTarget.style.background = "#ffffff";
-                  e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)";
-                }}
-              >
-                <div style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: "50%",
-                  background: "#1a73e8",
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #1a73e8 0%, #1557b0 100%)",
+              color: "#ffffff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 20,
+              fontWeight: 800,
+              flexShrink: 0,
+              boxShadow: "0 4px 10px rgba(26,115,232,0.35)",
+            }}>
+              A
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: "#18181b" }}>Anshuman Das</span>
+                <span style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  background: "#22c55e",
                   color: "#ffffff",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 18,
+                  padding: "1px 7px",
+                  borderRadius: 6,
+                  letterSpacing: "0.04em",
+                }}>
+                  ADMIN
+                </span>
+                <span style={{
+                  fontSize: 10,
                   fontWeight: 700,
-                  flexShrink: 0,
-                  boxShadow: "0 2px 6px rgba(26,115,232,0.3)",
+                  background: "rgba(26, 115, 232, 0.12)",
+                  color: "#1a73e8",
+                  padding: "1px 6px",
+                  borderRadius: 6,
                 }}>
-                  A
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#18181b" }}>Anshuman Das</span>
-                    <span style={{
-                      fontSize: 10,
-                      fontWeight: 800,
-                      background: "rgba(35, 122, 68, 0.12)",
-                      color: "#237a44",
-                      padding: "1px 6px",
-                      borderRadius: 6,
-                    }}>
-                      ADMIN
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 12, color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    anshumand108@gmail.com
-                  </div>
-                </div>
-                <div style={{ color: "#1a73e8", fontSize: 13, fontWeight: 600 }}>
-                  {loading ? "Signing in..." : "Select →"}
-                </div>
-              </button>
-
-              {/* Use Another Google Account */}
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => { setActiveTab("custom"); setError(""); }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  width: "100%",
-                  padding: "12px 14px",
-                  background: "transparent",
-                  border: "1px dashed #d4d4d8",
-                  borderRadius: 14,
-                  cursor: "pointer",
-                  textAlign: "left",
-                  color: "#18181b",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  transition: "all 0.15s ease",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#1a73e8"; e.currentTarget.style.background = "#fafaf9"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#d4d4d8"; e.currentTarget.style.background = "transparent"; }}
-              >
-                <div style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: "50%",
-                  background: "#f4efe9",
-                  color: "#52525b",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 18,
-                  flexShrink: 0,
-                }}>
-                  👤+
-                </div>
-                <span style={{ flex: 1 }}>Sign in with another Google account</span>
-                <span style={{ color: "#71717a", fontSize: 14 }}>›</span>
-              </button>
+                  VERIFIED
+                </span>
+              </div>
+              <div style={{ fontSize: 13, color: "#52525b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>
+                anshumand108@gmail.com
+              </div>
             </div>
           </div>
+
+          {/* Big Continue Button */}
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => handleSignIn("anshumand108@gmail.com", "Anshuman Das", "A")}
+            style={{
+              width: "100%",
+              background: "linear-gradient(135deg, #1a73e8 0%, #1557b0 100%)",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: 12,
+              padding: "13px 16px",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: loading ? "wait" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              boxShadow: "0 4px 12px rgba(26,115,232,0.35)",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 6px 18px rgba(26,115,232,0.45)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(26,115,232,0.35)";
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span>{loading ? "Signing in..." : "Continue as Anshuman Das (Admin) →"}</span>
+          </button>
+        </div>
+
+        {/* SECONDARY ACTION: Official Google OAuth Popup */}
+        <button
+          type="button"
+          disabled={loading}
+          onClick={triggerNativeGooglePopup}
+          style={{
+            width: "100%",
+            background: "#ffffff",
+            border: "1px solid #d4d4d8",
+            borderRadius: 14,
+            padding: "12px 14px",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: loading ? "wait" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            color: "#18181b",
+            marginBottom: 10,
+            transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "#1a73e8";
+            e.currentTarget.style.background = "#f8fafd";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "#d4d4d8";
+            e.currentTarget.style.background = "#ffffff";
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#18181b" }}>Launch Google Account Picker</div>
+              <div style={{ fontSize: 11, color: "#71717a" }}>Choose from your Google accounts in popup</div>
+            </div>
+          </div>
+          <span style={{ color: "#1a73e8", fontWeight: 700, fontSize: 13 }}>Popup ↗</span>
+        </button>
+
+        {/* Toggle Tab: Sign in with another Google email */}
+        {activeTab !== "custom" ? (
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => { setActiveTab("custom"); setError(""); }}
+            style={{
+              width: "100%",
+              background: "transparent",
+              border: "1px dashed #d4d4d8",
+              borderRadius: 14,
+              padding: "10px 14px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              color: "#52525b",
+              fontSize: 13,
+              fontWeight: 600,
+              marginBottom: 14,
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#1a73e8"; e.currentTarget.style.color = "#1a73e8"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#d4d4d8"; e.currentTarget.style.color = "#52525b"; }}
+          >
+            <span>✍️ Or enter another Google email address</span>
+            <span>+</span>
+          </button>
         ) : (
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSignIn(customEmail, customName);
             }}
-            style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 18 }}
+            style={{
+              background: "#fafafa",
+              border: "1px solid #e4e4e7",
+              borderRadius: 14,
+              padding: 14,
+              marginBottom: 14,
+            }}
           >
-            <div>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#27272a", marginBottom: 6 }}>
+            <div style={{ marginBottom: 10 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#27272a", marginBottom: 4 }}>
                 Google Email Address
               </label>
               <input
                 type="email"
                 value={customEmail}
                 onChange={(e) => setCustomEmail(e.target.value)}
-                placeholder="your.email@gmail.com"
+                placeholder="your.google.account@gmail.com"
                 required
                 autoFocus
                 style={{
                   width: "100%",
-                  padding: "11px 14px",
-                  borderRadius: 12,
+                  padding: "10px 12px",
+                  borderRadius: 10,
                   border: "1px solid #d4d4d8",
-                  fontSize: 14,
+                  fontSize: 13,
                   outline: "none",
                   boxSizing: "border-box",
+                  background: "#ffffff",
                 }}
               />
             </div>
 
-            <div>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#27272a", marginBottom: 6 }}>
-                Account Name (Optional)
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, color: "#27272a", marginBottom: 4 }}>
+                Full Name (Optional)
               </label>
               <input
                 type="text"
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
-                placeholder="Full Name"
+                placeholder="Your Name"
                 style={{
                   width: "100%",
-                  padding: "11px 14px",
-                  borderRadius: 12,
+                  padding: "10px 12px",
+                  borderRadius: 10,
                   border: "1px solid #d4d4d8",
-                  fontSize: 14,
+                  fontSize: 13,
                   outline: "none",
                   boxSizing: "border-box",
+                  background: "#ffffff",
                 }}
               />
             </div>
 
-            <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+            <div style={{ display: "flex", gap: 8 }}>
               <button
                 type="button"
                 onClick={() => { setActiveTab("select"); setError(""); }}
@@ -1327,15 +1450,15 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
                   flex: 1,
                   background: "#f4f4f5",
                   border: "1px solid #e4e4e7",
-                  borderRadius: 12,
-                  padding: "11px 0",
+                  borderRadius: 10,
+                  padding: "10px 0",
                   fontSize: 13,
                   fontWeight: 600,
                   cursor: "pointer",
                   color: "#27272a",
                 }}
               >
-                ← Back
+                Cancel
               </button>
               <button
                 type="submit"
@@ -1344,8 +1467,8 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
                   flex: 2,
                   background: "#1a73e8",
                   border: "none",
-                  borderRadius: 12,
-                  padding: "11px 0",
+                  borderRadius: 10,
+                  padding: "10px 0",
                   fontSize: 13,
                   fontWeight: 700,
                   cursor: loading ? "wait" : "pointer",
@@ -1353,16 +1476,58 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
                   boxShadow: "0 2px 8px rgba(26,115,232,0.3)",
                 }}
               >
-                {loading ? "Verifying..." : "Continue with Google →"}
+                {loading ? "Signing in..." : "Continue with Google →"}
               </button>
             </div>
           </form>
         )}
 
-        {/* Google Terms Footer */}
+        {/* Official Google Button Render Container (if available) */}
+        <div id="google-official-btn-container" style={{ display: "flex", justifyContent: "center", marginBottom: 10 }} />
+
+        {/* Collapsible Google Cloud Config Notice */}
+        <div style={{ borderTop: "1px solid #f4f4f5", paddingTop: 10, marginTop: 4 }}>
+          <button
+            type="button"
+            onClick={() => setShowDevInfo(!showDevInfo)}
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              fontSize: 11,
+              color: "#a1a1aa",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <span>⚙️ Google OAuth Client Details</span>
+            <span>{showDevInfo ? "▲" : "▼"}</span>
+          </button>
+
+          {showDevInfo && (
+            <div style={{
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: 10,
+              padding: "10px 12px",
+              fontSize: 11,
+              color: "#64748b",
+              marginTop: 8,
+              lineHeight: 1.5,
+            }}>
+              <div><strong>Client ID:</strong> <code style={{ fontSize: 10, background: "#e2e8f0", padding: "1px 4px", borderRadius: 4 }}>821750384600-...apps.googleusercontent.com</code></div>
+              <div style={{ marginTop: 4 }}>
+                <strong>Tip for live popup on localhost:</strong> In Google Cloud Console, add <code style={{ fontSize: 10, color: "#1a73e8" }}>http://localhost:5173</code> to <em>Authorized JavaScript origins</em> and <em>Authorized redirect URIs</em>.
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
         <div style={{
-          borderTop: "1px solid #f4f4f5",
-          paddingTop: 12,
+          marginTop: 12,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -1370,7 +1535,7 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
           color: "#a1a1aa",
         }}>
           <span>English (United States)</span>
-          <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ display: "flex", gap: 12 }}>
             <span style={{ cursor: "pointer" }}>Help</span>
             <span style={{ cursor: "pointer" }}>Privacy</span>
             <span style={{ cursor: "pointer" }}>Terms</span>

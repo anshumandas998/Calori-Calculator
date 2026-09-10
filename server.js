@@ -624,7 +624,7 @@ app.post('/api/login', async (req, res) => {
 // ─── Google OAuth Authentication Endpoint ─────────────────────────
 app.post('/api/auth/google', async (req, res) => {
   try {
-    let { email, name, avatar, credential } = req.body || {};
+    let { email, name, avatar, credential, access_token } = req.body || {};
 
     // If an official Google ID token credential was provided, verify with Google
     if (credential) {
@@ -640,6 +640,22 @@ app.post('/api/auth/google', async (req, res) => {
         }
       } catch (tokenErr) {
         console.warn('Google token verification notice:', tokenErr.message);
+      }
+    } else if (access_token) {
+      try {
+        const userinfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${access_token}` }
+        });
+        if (userinfoRes.ok) {
+          const gData = await userinfoRes.json();
+          if (gData.email) {
+            email = gData.email;
+            name = gData.name || name;
+            avatar = gData.picture || avatar;
+          }
+        }
+      } catch (tokenErr) {
+        console.warn('Google userinfo verification notice:', tokenErr.message);
       }
     }
 
