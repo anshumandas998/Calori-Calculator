@@ -662,7 +662,8 @@ app.post('/api/auth/google', async (req, res) => {
     const safeEmail = (email || 'google.user@nutriai.com').trim().toLowerCase();
     const safeName = name || safeEmail.split('@')[0] || 'Google User';
     const safeAvatar = avatar || safeName.charAt(0).toUpperCase();
-    const defaultRole = (safeEmail === 'anshumand108@gmail.com' || safeEmail === 'demo.admin@example.com' || safeEmail === 'admin@nutriai.com') ? 'admin' : 'user';
+    const isOwnerAdmin = (safeEmail === 'anshumandas908@gmail.com' || safeEmail === 'anshumand108@gmail.com' || safeEmail === 'demo.admin@example.com' || safeEmail === 'admin@nutriai.com');
+    const defaultRole = isOwnerAdmin ? 'admin' : 'user';
 
     let user = null;
     if (supabase.isConfigured()) {
@@ -679,7 +680,7 @@ app.post('/api/auth/google', async (req, res) => {
             avatar: safeAvatar
           });
           await supabase.upsertGoals(user.id, { calories: 2000, protein: 150, carbs: 250, fat: 65 });
-        } else if (safeEmail === 'anshumand108@gmail.com' && user.role !== 'admin') {
+        } else if (isOwnerAdmin && user.role !== 'admin') {
           user.role = 'admin';
           try { await supabase.adminUpdateUser(user.id, { role: 'admin' }); } catch (_) {}
         }
@@ -697,7 +698,7 @@ app.post('/api/auth/google', async (req, res) => {
         const result = stmt.run(safeName, safeEmail, dummyPassword, defaultRole, 'maintain', safeAvatar);
         user = { id: result.lastInsertRowid, name: safeName, email: safeEmail, role: defaultRole, goal: 'maintain', avatar: safeAvatar };
         db.prepare('INSERT OR IGNORE INTO goals (user_id) VALUES (?)').run(user.id);
-      } else if (safeEmail === 'anshumand108@gmail.com') {
+      } else if (isOwnerAdmin) {
         user.role = 'admin';
         db.prepare("UPDATE users SET role = 'admin' WHERE LOWER(email) = ?").run(safeEmail);
       }
@@ -727,7 +728,7 @@ app.post('/api/admin/login', async (req, res) => {
 
     // Check if logging in as admin alias or specific admin emails
     if (inputId === 'admin' || inputId === 'admin@nutriai.com') {
-      user = db.prepare("SELECT * FROM users WHERE LOWER(email) = 'anshumand108@gmail.com' OR LOWER(email) = 'admin@nutriai.com' OR role = 'admin' LIMIT 1").get();
+      user = db.prepare("SELECT * FROM users WHERE LOWER(email) = 'anshumandas908@gmail.com' OR LOWER(email) = 'anshumand108@gmail.com' OR LOWER(email) = 'admin@nutriai.com' OR role = 'admin' LIMIT 1").get();
       if (!user) {
         user = { id: 1, name: 'Admin', email: 'admin@nutriai.com', role: 'admin' };
       }
@@ -759,7 +760,7 @@ app.post('/api/admin/login', async (req, res) => {
     }
 
     // Verify admin role authorization
-    const isAuthorizedAdmin = user.role === 'admin' || user.email === 'anshumand108@gmail.com' || user.email === 'admin@nutriai.com' || inputId === 'admin';
+    const isAuthorizedAdmin = user.role === 'admin' || user.email === 'anshumandas908@gmail.com' || user.email === 'anshumand108@gmail.com' || user.email === 'admin@nutriai.com' || inputId === 'admin';
     if (!isAuthorizedAdmin) {
       return res.status(403).json({ error: 'Access denied: This user ID does not have administrator permissions.' });
     }
@@ -780,7 +781,7 @@ const authenticateAdminOrToken = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
   if (token) {
     jwt.verify(token, JWT_SECRET, (err, user) => {
-      if (!err && user && (user.role === 'admin' || user.email === 'anshumand108@gmail.com' || user.email === 'admin@nutriai.com')) {
+      if (!err && user && (user.role === 'admin' || user.email === 'anshumandas908@gmail.com' || user.email === 'anshumand108@gmail.com' || user.email === 'admin@nutriai.com')) {
         req.user = user;
         return next();
       }

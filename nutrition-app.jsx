@@ -973,7 +973,7 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
 
       // If in admin mode, verify the account is an authorized admin
       if (isAdminMode && data.user.role !== "admin") {
-        throw new Error(`Access denied: Google account ${safeEmail} does not have administrator privileges. Please sign in with an authorized admin account (anshumand108@gmail.com).`);
+        throw new Error(`Access denied: Google account ${safeEmail} does not have administrator privileges. Please sign in with an authorized admin account (anshumandas908@gmail.com).`);
       }
 
       setStoredToken(data.token);
@@ -1263,7 +1263,7 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
                 </span>
               </div>
               <div style={{ fontSize: 13, color: "#52525b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>
-                anshumand108@gmail.com
+                anshumandas908@gmail.com
               </div>
             </div>
           </div>
@@ -1272,7 +1272,7 @@ function GoogleSignInModal({ isOpen, onClose, onSuccess, isAdminMode = false, is
           <button
             type="button"
             disabled={loading}
-            onClick={() => handleSignIn("anshumand108@gmail.com", "Anshuman Das", "A")}
+            onClick={() => handleSignIn("anshumandas908@gmail.com", "Anshuman Das", "A")}
             style={{
               width: "100%",
               background: "linear-gradient(135deg, #1a73e8 0%, #1557b0 100%)",
@@ -3586,7 +3586,7 @@ function AdminAuthModal({ isOpen, onClose, onAdminSuccess, isMobile }) {
               type="text"
               value={adminId}
               onChange={(e) => setAdminId(e.target.value)}
-              placeholder="e.g. anshumand108@gmail.com or admin"
+              placeholder="e.g. anshumandas908@gmail.com or admin"
               autoFocus
               style={{
                 width: "100%",
@@ -3844,7 +3844,7 @@ export default function NutritionApp() {
   const [adminAuthModalOpen, setAdminAuthModalOpen] = useState(false);
   const [googleAuthModalOpen, setGoogleAuthModalOpen] = useState(false);
   const isAuthorizedAdmin = Boolean(
-    user && (user.role === "admin" || user.email === "anshumand108@gmail.com" || user.email === "admin@nutriai.com")
+    user && (user.role === "admin" || user.email === "anshumandas908@gmail.com" || user.email === "anshumand108@gmail.com" || user.email === "admin@nutriai.com")
   );
 
   useEffect(() => {
